@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://world_map"]
+
+[sub_resource type="TileSet" id="TileSet_world"]
+
+[node name="WorldMap" type="Node2D"]
+
+[node name="GroundLayer" type="TileMapLayer" parent="." groups=["tilemap"]]
+tile_set = SubResource("TileSet_world")
+
+[node name="CollisionLayer" type="TileMapLayer" parent="." groups=["tilemap"]]
+tile_set = SubResource("TileSet_world")

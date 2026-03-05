@@ -1,0 +1,110 @@
+[gd_scene format=3 uid="uid://nnmiupuoc5du"]
+
+[ext_resource type="Script" uid="uid://bspffthjsdqrq" path="res://scripts/ui.gd" id="1_ui"]
+
+[node name="UI" type="CanvasLayer" unique_id=220988765]
+script = ExtResource("1_ui")
+
+[node name="StatsPanel" type="PanelContainer" parent="." unique_id=23100444]
+offset_right = 200.0
+offset_bottom = 150.0
+
+[node name="VBox" type="VBoxContainer" parent="StatsPanel" unique_id=1662641687]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="StatsPanel/VBox" unique_id=402560391]
+layout_mode = 2
+text = "Hero"
+
+[node name="LevelLabel" type="Label" parent="StatsPanel/VBox" unique_id=414151365]
+layout_mode = 2
+text = "Lv.1"
+
+[node name="HPBar" type="ProgressBar" parent="StatsPanel/VBox" unique_id=759643520]
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="StatsPanel/VBox" unique_id=1925953712]
+layout_mode = 2
+text = "HP: 100/100"
+
+[node name="MPBar" type="ProgressBar" parent="StatsPanel/VBox" unique_id=77620906]
+layout_mode = 2
+max_value = 50.0
+value = 50.0
+show_percentage = false
+
+[node name="MPLabel" type="Label" parent="StatsPanel/VBox" unique_id=498734637]
+layout_mode = 2
+text = "MP: 50/50"
+
+[node name="EXPLabel" type="Label" parent="StatsPanel/VBox" unique_id=2050047622]
+layout_mode = 2
+text = "EXP: 0/100"
+
+[node name="GoldLabel" type="Label" parent="StatsPanel/VBox" unique_id=461371618]
+layout_mode = 2
+text = "Gold: 0"
+
+[node name="AttackLabel" type="Label" parent="StatsPanel/VBox" unique_id=461371619]
+layout_mode = 2
+text = "ATK: 10"
+
+[node name="DefenseLabel" type="Label" parent="StatsPanel/VBox" unique_id=461371620]
+layout_mode = 2
+text = "DEF: 5"
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="." unique_id=1506223886]
+offset_left = 1.0
+offset_top = 246.0
+offset_right = 341.0
+offset_bottom = 277.0
+
+[node name="InventoryButton" type="Button" parent="ButtonsHBox" unique_id=865894550]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "物品栏 (I)"
+
+[node name="SaveButton" type="Button" parent="ButtonsHBox" unique_id=1345482239]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "存档 (F5)"
+
+[node name="LoadButton" type="Button" parent="ButtonsHBox" unique_id=970960686]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "读档 (F9)"
+
+[node name="InventoryPanel" type="PanelContainer" parent="." unique_id=1600227269]
+visible = false
+offset_left = 400.0
+offset_top = 100.0
+offset_right = 900.0
+offset_bottom = 500.0
+
+[node name="InventoryVBox" type="VBoxContainer" parent="InventoryPanel" unique_id=168213931]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="TitleLabel" type="Label" parent="InventoryPanel/InventoryVBox" unique_id=1843789431]
+layout_mode = 2
+text = "物品栏"
+
+[node name="ItemsScroll" type="ScrollContainer" parent="InventoryPanel/InventoryVBox" unique_id=1632167073]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemsGrid" type="GridContainer" parent="InventoryPanel/InventoryVBox/ItemsScroll" unique_id=563202237]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 5
+
+[node name="CloseButton" type="Button" parent="InventoryPanel/InventoryVBox" unique_id=1425044208]
+layout_mode = 2
+text = "关闭"
