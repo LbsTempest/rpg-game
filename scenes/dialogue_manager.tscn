@@ -35,6 +35,11 @@ theme_override_font_sizes/font_size = 20
 text = "对话内容..."
 autowrap_mode = 2
 
+[node name="OptionsContainer" type="VBoxContainer" parent="DialoguePanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 5
+
 [node name="NextButton" type="Button" parent="DialoguePanel/VBoxContainer"]
 layout_mode = 2
 text = "下一句 (Enter/Space)"

@@ -7,7 +7,7 @@ script = ExtResource("1_ui")
 
 [node name="StatsPanel" type="PanelContainer" parent="." unique_id=23100444]
 offset_right = 200.0
-offset_bottom = 150.0
+offset_bottom = 180.0
 
 [node name="VBox" type="VBoxContainer" parent="StatsPanel" unique_id=1662641687]
 layout_mode = 2
@@ -58,9 +58,9 @@ text = "DEF: 5"
 
 [node name="ButtonsHBox" type="HBoxContainer" parent="." unique_id=1506223886]
 offset_left = 1.0
-offset_top = 246.0
+offset_top = 247.0
 offset_right = 341.0
-offset_bottom = 277.0
+offset_bottom = 278.0
 
 [node name="InventoryButton" type="Button" parent="ButtonsHBox" unique_id=865894550]
 layout_mode = 2

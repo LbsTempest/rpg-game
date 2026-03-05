@@ -6,9 +6,7 @@ signal mana_changed(current: int, maximum: int)
 signal level_up(new_level: int)
 signal died()
 
-const TILE_SIZE := 32
-
-@export var move_speed: float = 150.0
+@export var move_speed: float = 200.0
 @export var current_map: String = "world"
 
 @export_category("Stats")
@@ -24,12 +22,9 @@ var current_mana: int
 var experience_to_next_level: int
 
 var _direction: Vector2 = Vector2.ZERO
-var _is_moving: bool = false
 var _facing_direction: Vector2 = Vector2.DOWN
 
-@onready var sprite := $Sprite2D
-@onready var animation_player := $AnimationPlayer
-@onready var state_label := $StateLabel
+@onready var animated_sprite := $AnimatedSprite2D
 
 enum Direction { UP, DOWN, LEFT, RIGHT }
 
@@ -39,10 +34,8 @@ func _ready() -> void:
 	experience_to_next_level = _calculate_exp_requirement()
 	_update_ui()
 
-func _physics_process(_delta: float) -> void:
-	if _is_moving:
-		return
-	
+func _physics_process(delta: float) -> void:
+	# 获取输入方向
 	_direction = Vector2.ZERO
 	_direction.x = Input.get_axis("ui_left", "ui_right")
 	_direction.y = Input.get_axis("ui_up", "ui_down")
@@ -50,19 +43,24 @@ func _physics_process(_delta: float) -> void:
 	if _direction != Vector2.ZERO:
 		_direction = _direction.normalized()
 		_facing_direction = _direction
-		_move()
-
-func _move() -> void:
-	var target_position: Vector2 = position + _direction * TILE_SIZE
-	
-	if _can_move_to(target_position):
-		_is_moving = true
-		_play_walk_animation()
-		var tween := create_tween()
-		tween.tween_property(self, "position", target_position, 0.3)
-		tween.tween_callback(_on_move_finished)
+		
+		# 检查前方是否可以移动
+		var next_position = position + _direction * move_speed * delta
+		if _can_move_to(next_position):
+			velocity = _direction * move_speed
+			_play_walk_animation()
+		else:
+			# 碰到障碍，停止
+			velocity = Vector2.ZERO
+			_play_idle_animation()
 	else:
+		# 没有输入，立即停止
+		velocity = Vector2.ZERO
 		_play_idle_animation()
+	
+	# 应用移动
+	move_and_slide()
+	_update_facing()
 
 func _can_move_to(target_pos: Vector2) -> bool:
 	var tilemap: TileMapLayer = get_tree().get_first_node_in_group("tilemap")
@@ -77,19 +75,20 @@ func _can_move_to(target_pos: Vector2) -> bool:
 	
 	return true
 
-func _on_move_finished() -> void:
-	_is_moving = false
-	_play_idle_animation()
-
 func _play_walk_animation() -> void:
-	var anim_name: String = _get_direction_animation("walk")
-	if animation_player.has_animation(anim_name):
-		animation_player.play(anim_name)
+	if animated_sprite.animation != "walk":
+		animated_sprite.play("walk")
 
 func _play_idle_animation() -> void:
-	var anim_name: String = _get_direction_animation("idle")
-	if animation_player.has_animation(anim_name):
-		animation_player.play(anim_name)
+	if animated_sprite.animation != "idle":
+		animated_sprite.play("idle")
+
+func _update_facing() -> void:
+	# 根据朝向翻转精灵
+	if _facing_direction.x < 0:
+		animated_sprite.flip_h = true
+	elif _facing_direction.x > 0:
+		animated_sprite.flip_h = false
 
 func _get_direction_animation(prefix: String) -> String:
 	var dir: String = ""

@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://d1b7rq4i7jy4o"]
+
+[ext_resource type="Script" uid="uid://2meirqfq4w6b" path="res://scripts/enemy.gd" id="1_enemy"]
+[ext_resource type="SpriteFrames" uid="uid://d0fky70pht0uk" path="res://assets/sprites/player/skeleton.tres" id="2_5365w"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_skeleton"]
+size = Vector2(20, 28)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 100.0
+
+[node name="Skeleton" type="CharacterBody2D" unique_id=2047933060]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_enemy")
+enemy_name = "骷髅兵"
+attack = 12
+defense = 3
+speed = 90.0
+experience_reward = 25
+gold_reward = 15
+ai_type = 1
+patrol_radius = 120.0
+detection_radius = 100.0
+chase_radius = 200.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=452898774]
+sprite_frames = ExtResource("2_5365w")
+animation = &"walk"
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=109955830]
+position = Vector2(0, 6)
+shape = SubResource("RectangleShape2D_skeleton")
+
+[node name="NameLabel" type="Label" parent="." unique_id=1710322871]
+offset_left = -30.0
+offset_top = -35.0
+offset_right = 30.0
+offset_bottom = -12.0
+text = "骷髅兵"
+horizontal_alignment = 1
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1540330245]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1083456234]
+shape = SubResource("CircleShape2D_detection")

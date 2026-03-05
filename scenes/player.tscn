@@ -1,30 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://player_scene"]
+[gd_scene format=3 uid="uid://b3nvuy6371nqy"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://b6owbi62jsrtn" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" uid="uid://dwu7winkg01o0" path="res://assets/sprites/player/player.tres" id="2_g2els"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(24, 24)
+size = Vector2(16, 16)
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" unique_id=1196712030]
+position = Vector2(0, 1)
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_player")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 0)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=302788813]
+position = Vector2(0, 8)
 shape = SubResource("RectangleShape2D_player")
 
-[node name="Sprite2D" type="ColorRect" parent="."]
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(0.2, 0.6, 1, 1)
-
-[node name="StateLabel" type="Label" parent="."]
-offset_left = -20.0
-offset_top = -30.0
-offset_right = 20.0
-offset_bottom = -7.0
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1336646999]
+scale = Vector2(1.945, 1.945)
+sprite_frames = ExtResource("2_g2els")
+animation = &"walk"
+autoplay = "idle"
