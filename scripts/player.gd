@@ -23,6 +23,7 @@ var experience_to_next_level: int
 
 var _direction: Vector2 = Vector2.ZERO
 var _facing_direction: Vector2 = Vector2.DOWN
+var _is_defending: bool = false
 
 @onready var animated_sprite := $AnimatedSprite2D
 
@@ -35,10 +36,17 @@ func _ready() -> void:
 	_update_ui()
 
 func _physics_process(delta: float) -> void:
+	# 如果对话、战斗或物品栏正在进行，停止移动
+	if DialogueManager.is_active or BattleManager.is_in_battle or GameManager.is_inventory_open:
+		velocity = Vector2.ZERO
+		_play_idle_animation()
+		move_and_slide()
+		return
+	
 	# 获取输入方向
 	_direction = Vector2.ZERO
-	_direction.x = Input.get_axis("ui_left", "ui_right")
-	_direction.y = Input.get_axis("ui_up", "ui_down")
+	_direction.x = Input.get_axis("move_left", "move_right")
+	_direction.y = Input.get_axis("move_up", "move_down")
 	
 	if _direction != Vector2.ZERO:
 		_direction = _direction.normalized()
@@ -109,12 +117,23 @@ func get_total_defense() -> int:
 	return defense + InventoryManager.get_total_defense()
 
 func take_damage(amount: int) -> void:
-	var damage_val: int = max(1, amount - get_total_defense())
+	var total_defense = get_total_defense()
+	# 防御姿态时防御力翻倍
+	if _is_defending:
+		total_defense *= 2
+	
+	var damage_val: int = max(1, amount - total_defense)
 	current_health = max(0, current_health - damage_val)
 	health_changed.emit(current_health, max_health)
 	
 	if current_health <= 0:
 		died.emit()
+
+func set_defending(defending: bool) -> void:
+	_is_defending = defending
+
+func is_defending() -> bool:
+	return _is_defending
 
 func heal(amount: int) -> void:
 	current_health = min(max_health, current_health + amount)
@@ -172,7 +191,9 @@ func get_save_data() -> Dictionary:
 
 func load_save_data(data: Dictionary) -> void:
 	if data.has("position"):
+		var old_pos = position
 		position = Vector2(data.position.x, data.position.y)
+		print("Player: 位置从 (", old_pos.x, ", ", old_pos.y, ") 加载为 (", position.x, ", ", position.y, ")")
 	if data.has("current_map"):
 		current_map = data.current_map
 	if data.has("max_health"):

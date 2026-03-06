@@ -25,6 +25,7 @@ signal health_changed(current: int, maximum: int)
 var current_health: int
 var is_alive: bool = true
 var is_chasing: bool = false
+var _defense_boost: int = 0  # 临时防御加成
 
 # 游荡相关
 var spawn_position: Vector2
@@ -38,6 +39,9 @@ func _ready() -> void:
 	current_health = max_health
 	spawn_position = position
 	
+	# 添加到敌人组
+	add_to_group("enemies")
+	
 	# 初始化游荡方向
 	_change_wander_direction()
 	
@@ -45,13 +49,20 @@ func _ready() -> void:
 	if detection_area:
 		detection_area.body_entered.connect(_on_player_entered_detection)
 		detection_area.body_exited.connect(_on_player_exited_detection)
+	
+	# 注册到 EnemyManager（会恢复存档状态）
+	call_deferred("_register_to_manager")
+
+func _register_to_manager() -> void:
+	if EnemyManager:
+		EnemyManager.register_enemy(self)
 
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 	
-	# 检查是否在战斗中
-	if BattleManager.is_in_battle:
+	# 检查是否在战斗中、对话中或物品栏打开
+	if BattleManager.is_in_battle or DialogueManager.is_active or GameManager.is_inventory_open:
 		velocity = Vector2.ZERO
 		_play_idle_animation()
 		return
@@ -162,7 +173,7 @@ func _start_battle() -> void:
 		BattleManager.start_battle(self)
 
 func take_damage(amount: int) -> void:
-	var damage: int = max(1, amount - defense)
+	var damage: int = max(1, amount - get_total_defense())
 	current_health = max(0, current_health - damage)
 	health_changed.emit(current_health, max_health)
 	
@@ -172,6 +183,11 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	is_alive = false
 	velocity = Vector2.ZERO
+	
+	# 保存死亡状态
+	if EnemyManager:
+		EnemyManager.update_enemy_state(self)
+	
 	# 播放死亡动画（如果有）
 	if animated_sprite and animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("death"):
 		animated_sprite.play("death")
@@ -235,7 +251,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				result.message = "%s 对 %s 造成 %d 点伤害！" % [enemy_name, target.name, attack]
 		
 		"defend":
-			defense += 2  # 临时增加防御
+			_defense_boost = 2  # 临时增加防御
 			result.message = "%s 进入防御姿态，防御力提升！" % enemy_name
 		
 		"flee":
@@ -247,6 +263,31 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 	
 	return result
 
+func get_total_defense() -> int:
+	return defense + _defense_boost
+
+func reset_defense_boost() -> void:
+	_defense_boost = 0
+
+func load_save_data(data: Dictionary) -> void:
+	if data.has("current_health"):
+		current_health = data.current_health
+	if data.has("max_health"):
+		max_health = data.max_health
+	if data.has("attack"):
+		attack = data.attack
+	if data.has("defense"):
+		defense = data.defense
+	if data.has("position"):
+		position = Vector2(data.position.x, data.position.y)
+	if data.has("spawn_position"):
+		spawn_position = Vector2(data.spawn_position.x, data.spawn_position.y)
+	if data.has("is_alive"):
+		is_alive = data.is_alive
+		if not is_alive:
+			visible = false
+			process_mode = Node.PROCESS_MODE_DISABLED
+
 func get_save_data() -> Dictionary:
 	return {
 		"enemy_name": enemy_name,
@@ -257,5 +298,6 @@ func get_save_data() -> Dictionary:
 		"experience_reward": experience_reward,
 		"gold_reward": gold_reward,
 		"position": {"x": position.x, "y": position.y},
-		"spawn_position": {"x": spawn_position.x, "y": spawn_position.y}
+		"spawn_position": {"x": spawn_position.x, "y": spawn_position.y},
+		"is_alive": is_alive
 	}

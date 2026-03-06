@@ -145,14 +145,52 @@ func _show_branch_options(branch_data: Dictionary) -> void:
 func _on_option_selected(option_index: int, option_data: Dictionary) -> void:
 	dialogue_option_selected.emit(option_index, option_data.get("text", ""))
 	
+	# 检查是否有action需要执行
+	if option_data.has("action"):
+		var action = option_data["action"]
+		var action_result = _execute_action(action)
+		
+		# 如果action返回true，结束对话（如打开商店）
+		if action_result:
+			_end_dialogue()
+			return
+	
 	# 如果选项有跳转目标，跳转到指定行
 	if option_data.has("next"):
-		current_index = option_data.get("next", current_index + 1)
+		var next_index = option_data.get("next", current_index + 1)
+		# next = -1 表示结束对话
+		if next_index < 0:
+			_end_dialogue()
+			return
+		current_index = next_index
 	else:
 		current_index += 1
 	
 	_clear_options()
 	_show_current_line()
+
+# 执行对话选项的action
+func _execute_action(action: String) -> bool:
+	if current_npc == null:
+		return false
+	
+	match action:
+		"open_shop":
+			if current_npc.has_method("open_shop"):
+				return current_npc.open_shop()
+			return false
+		
+		"accept_quest":
+			if current_npc.has_method("accept_quest"):
+				return current_npc.accept_quest()
+			return false
+		
+		"reward_quest":
+			if current_npc.has_method("reward_quest"):
+				return current_npc.reward_quest()
+			return false
+	
+	return false
 
 func _clear_options() -> void:
 	for child in options_container.get_children():

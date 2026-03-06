@@ -43,6 +43,8 @@ func _ready() -> void:
 	_update_inventory_display()
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("open_inventory"):
+		_on_inventory_pressed()
 	if event.is_action_pressed("ui_focus_next"):
 		if Input.is_action_pressed("ui_accept"):
 			GameManager.save_game()
@@ -112,6 +114,7 @@ func _on_inventory_pressed() -> void:
 
 func _open_inventory() -> void:
 	is_inventory_open = true
+	GameManager.is_inventory_open = true
 	inventory_panel.visible = true
 	# 等待一帧确保容器布局完成
 	await get_tree().process_frame
@@ -119,6 +122,7 @@ func _open_inventory() -> void:
 
 func _close_inventory() -> void:
 	is_inventory_open = false
+	GameManager.is_inventory_open = false
 	inventory_panel.visible = false
 
 func _on_close_inventory() -> void:

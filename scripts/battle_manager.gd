@@ -12,6 +12,7 @@ var current_enemy: Node2D = null
 var player: Node = null
 
 var _battle_scene: Node = null
+var _is_player_defending: bool = false
 
 func start_battle(enemy: Node2D) -> void:
 	if is_in_battle:
@@ -20,6 +21,7 @@ func start_battle(enemy: Node2D) -> void:
 	is_in_battle = true
 	current_enemy = enemy
 	player = get_tree().get_first_node_in_group("player")
+	_is_player_defending = false
 	
 	# 暂停游戏主场景
 	get_tree().paused = true
@@ -40,6 +42,8 @@ func start_battle(enemy: Node2D) -> void:
 	battle_scene.initialize(player, enemy)
 	battle_scene.action_selected.connect(_on_player_action)
 	battle_scene.flee_requested.connect(_on_flee_attempt)
+	battle_scene.skill_selected.connect(_on_skill_selected)
+	battle_scene.item_used.connect(_on_item_used)
 	
 	battle_started.emit(enemy)
 	battle_log.emit("战斗开始！遭遇了 %s！" % enemy.enemy_name)
@@ -61,6 +65,11 @@ func end_battle(result: String) -> void:
 			}
 			player.add_experience(current_enemy.experience_reward)
 			InventoryManager.add_gold(current_enemy.gold_reward)
+			
+			# 更新任务进度
+			if "enemy_name" in current_enemy:
+				QuestManager.update_all_quests("kill", current_enemy.enemy_name, 1)
+			
 			battle_log.emit("战斗胜利！获得 %d 经验值和 %d 金币！" % [current_enemy.experience_reward, current_enemy.gold_reward])
 		
 		"defeat":
@@ -98,14 +107,15 @@ func _start_turn() -> void:
 		return
 	
 	if current_enemy.is_alive and player.current_health > 0:
+		_is_player_defending = false
 		turn_changed.emit(true)
 		battle_log.emit("玩家回合 - 请选择行动")
 
-func _on_player_action(action: String) -> void:
+func _on_player_action(action: String, data: Dictionary = {}) -> void:
 	if not is_in_battle:
 		return
 	
-	var result := _execute_player_action(action)
+	var result := _execute_player_action(action, data)
 	battle_log.emit(result.message)
 	
 	if result.ended:
@@ -115,7 +125,7 @@ func _on_player_action(action: String) -> void:
 	# 敌人回合
 	_start_enemy_turn()
 
-func _execute_player_action(action: String) -> Dictionary:
+func _execute_player_action(action: String, data: Dictionary = {}) -> Dictionary:
 	var result := {"ended": false, "result": "", "message": ""}
 	
 	match action:
@@ -130,34 +140,39 @@ func _execute_player_action(action: String) -> Dictionary:
 			if not is_alive:
 				result.ended = true
 				result.result = "victory"
-			
+		
 		"defend":
-			player.defense += 5  # 临时增加防御
+			_is_player_defending = true
 			result.message = "你进入防御姿态，防御力提升！"
 		
 		"skill":
-			# 使用第一个可用技能作为示例
-			var skills: Array[Dictionary] = SkillManager.get_learned_skills()
-			if skills.size() > 0:
-				var first_skill: Dictionary = skills[0]
-				var skill_id: String = first_skill.get("skill_id", "")
-				var skill_result: Dictionary = SkillManager.use_skill(skill_id, player, current_enemy)
-				result.message = skill_result.message
+			# 通过技能选择界面选择的技能
+			var skill_id = data.get("skill_id", "")
+			if skill_id.is_empty():
+				result.message = "未选择技能"
+				return result
+			
+			var skill_result: Dictionary = SkillManager.use_skill(skill_id, player, current_enemy)
+			result.message = skill_result.message
+			
+			if skill_result.success:
+				# 检查敌人是否死亡
+				var is_alive: bool = current_enemy.is_alive if "is_alive" in current_enemy else true
+				if not is_alive:
+					result.ended = true
+					result.result = "victory"
 				
-				if skill_result.success:
-					# 检查敌人是否死亡
-					var is_alive: bool = current_enemy.is_alive if "is_alive" in current_enemy else true
-					if not is_alive:
-						result.ended = true
-						result.result = "victory"
-					
-					# 减少技能冷却
-					SkillManager.reduce_cooldowns()
-			else:
-				result.message = "没有学会任何技能"
+				# 减少技能冷却
+				SkillManager.reduce_cooldowns()
 		
 		"item":
-			result.message = "请使用物品栏"
+			# 通过物品选择界面使用的物品
+			var item_id = data.get("item_id", "")
+			if item_id.is_empty():
+				result.message = "未选择物品"
+				return result
+			
+			result = _use_item_in_battle(item_id)
 		
 		"flee":
 			var flee_chance := 0.5
@@ -171,13 +186,73 @@ func _execute_player_action(action: String) -> Dictionary:
 	
 	return result
 
+# 使用物品
+func _use_item_in_battle(item_id: String) -> Dictionary:
+	var result := {"ended": false, "result": "", "message": ""}
+	
+	if not InventoryManager.has_item_id(item_id):
+		result.message = "物品不存在"
+		return result
+	
+	var item_data = InventoryManager.get_item_data(item_id)
+	var item_name = item_data.get("item_name", "未知物品")
+	
+	# 检查是否为消耗品
+	if item_data.get("item_type", 0) != 0:  # 不是消耗品
+		result.message = "%s 不是消耗品" % item_name
+		return result
+	
+	# 使用物品效果
+	var used = false
+	
+	if item_data.has("heal_amount") and item_data.heal_amount > 0:
+		if player.current_health < player.max_health:
+			player.heal(item_data.heal_amount)
+			used = true
+			result.message = "使用 %s，恢复 %d 点生命值" % [item_name, item_data.heal_amount]
+		else:
+			result.message = "生命值已满"
+			return result
+	
+	if item_data.has("restore_mana_amount") and item_data.restore_mana_amount > 0:
+		if player.current_mana < player.max_mana:
+			player.restore_mana(item_data.restore_mana_amount)
+			used = true
+			result.message = "使用 %s，恢复 %d 点魔法值" % [item_name, item_data.restore_mana_amount]
+		else:
+			result.message = "魔法值已满"
+			return result
+	
+	if used:
+		# 从背包移除物品
+		InventoryManager.remove_item_by_id(item_id, 1)
+	else:
+		result.message = "%s 没有效果" % item_name
+	
+	return result
+
+# 技能选择回调
+func _on_skill_selected(skill_id: String) -> void:
+	_on_player_action("skill", {"skill_id": skill_id})
+
+# 物品使用回调
+func _on_item_used(item_id: String) -> void:
+	_on_player_action("item", {"item_id": item_id})
+
 func _start_enemy_turn() -> void:
 	if not is_in_battle:
 		return
 	
+	# 重置玩家防御状态
+	player.set_defending(false)
+	
 	turn_changed.emit(false)
 	var enemy_name: String = current_enemy.enemy_name if "enemy_name" in current_enemy else "怪物"
 	battle_log.emit("%s 的回合..." % enemy_name)
+	
+	# 重置敌人防御加成（从上一回合）
+	if current_enemy.has_method("reset_defense_boost"):
+		current_enemy.reset_defense_boost()
 	
 	# 敌人AI决策
 	var action_data: Dictionary = current_enemy.call("decide_action", player) if current_enemy.has_method("decide_action") else {"action": "attack", "target": player}
@@ -194,7 +269,7 @@ func _start_enemy_turn() -> void:
 	_start_turn()
 
 func _on_flee_attempt() -> void:
-	_on_player_action("flee")
+	_on_player_action("flee", {})
 
 func _handle_player_defeat() -> void:
 	# 玩家死亡处理：恢复少量HP，传送回起点
