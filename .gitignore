@@ -1,3 +1,30 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Temporary files
+tmp/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+/build/
+/dist/
+*.exe
+*.apk
+*.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.directory
+
+# Logs
+*.log

@@ -16,6 +16,8 @@ config/features=PackedStringArray("4.6")
 
 [autoload]
 
+GameConstants="*res://scripts/constants.gd"
+Utils="*res://scripts/utils.gd"
 GameManager="*res://scripts/game_manager.gd"
 InventoryManager="*res://scripts/inventory_manager.gd"
 BattleManager="*res://scripts/battle_manager.gd"

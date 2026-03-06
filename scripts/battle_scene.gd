@@ -209,7 +209,7 @@ func _update_skill_buttons() -> void:
 		var cooldown = skill.get("current_cooldown", 0)
 		var can_use = skill.get("can_use", false)
 		
-		var button_text = "%s (%d MP)" % [skill_name, mana_cost]
+		var button_text = "%s (%d 魔法)" % [skill_name, mana_cost]
 		if cooldown > 0:
 			button_text += " [冷却%d]" % cooldown
 		elif not can_use:

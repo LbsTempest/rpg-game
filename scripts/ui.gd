@@ -23,7 +23,7 @@ var player: Node
 var is_inventory_open: bool = false
 
 func _ready() -> void:
-	player = get_tree().get_first_node_in_group("player")
+	player = Utils.get_group_node("player")
 	if player:
 		player.health_changed.connect(_on_health_changed)
 		player.mana_changed.connect(_on_mana_changed)
@@ -33,24 +33,22 @@ func _ready() -> void:
 	InventoryManager.item_added.connect(_on_inventory_changed)
 	InventoryManager.item_removed.connect(_on_inventory_changed)
 	InventoryManager.equipment_changed.connect(_on_equipment_changed)
+	InventoryManager.gold_changed.connect(_on_gold_changed)
 	
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	save_button.pressed.connect(_on_save_pressed)
 	load_button.pressed.connect(_on_load_pressed)
 	close_button.pressed.connect(_on_close_inventory)
 	
-	_add_default_items()
 	_update_inventory_display()
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("open_inventory"):
 		_on_inventory_pressed()
-	if event.is_action_pressed("ui_focus_next"):
-		if Input.is_action_pressed("ui_accept"):
-			GameManager.save_game()
-	if event.is_action_pressed("ui_cancel"):
-		if is_inventory_open:
-			_close_inventory()
+	if event.is_action_pressed("ui_focus_next") and Input.is_action_pressed("ui_accept"):
+		GameManager.save_game()
+	if event.is_action_pressed("ui_cancel") and is_inventory_open:
+		_close_inventory()
 
 func _update_stats() -> void:
 	if not player:
@@ -58,53 +56,49 @@ func _update_stats() -> void:
 	
 	hp_bar.max_value = player.max_health
 	hp_bar.value = player.current_health
-	hp_label.text = "HP: %d/%d" % [player.current_health, player.max_health]
+	hp_label.text = Utils.format_health(player.current_health, player.max_health)
 	
 	mp_bar.max_value = player.max_mana
 	mp_bar.value = player.current_mana
-	mp_label.text = "MP: %d/%d" % [player.current_mana, player.max_mana]
+	mp_label.text = Utils.format_mana(player.current_mana, player.max_mana)
 	
-	exp_label.text = "EXP: %d/%d" % [player.experience, player.experience_to_next_level]
-	level_label.text = "Lv.%d" % player.level
+	exp_label.text = "经验: %d/%d" % [player.experience, player.experience_to_next_level]
+	level_label.text = "等级:%d" % player.level
 	
-	gold_label.text = "Gold: %d" % InventoryManager.gold
+	gold_label.text = Utils.format_gold(InventoryManager.gold)
 	
-	var base_attack: int = player.attack
-	var equip_attack: int = InventoryManager.get_total_attack()
-	var total_attack: int = base_attack + equip_attack
-	if equip_attack > 0:
-		attack_label.text = "ATK: %d (+%d)" % [total_attack, equip_attack]
-	else:
-		attack_label.text = "ATK: %d" % total_attack
+	var base_attack = player.attack
+	var equip_attack = InventoryManager.get_total_attack()
+	var total_attack = base_attack + equip_attack
+	attack_label.text = "攻击: %d (+%d)" % [total_attack, equip_attack] if equip_attack > 0 else "攻击: %d" % total_attack
 	
-	var base_defense: int = player.defense
-	var equip_defense: int = InventoryManager.get_total_defense()
-	var total_defense: int = base_defense + equip_defense
-	if equip_defense > 0:
-		defense_label.text = "DEF: %d (+%d)" % [total_defense, equip_defense]
-	else:
-		defense_label.text = "DEF: %d" % total_defense
+	var base_defense = player.defense
+	var equip_defense = InventoryManager.get_total_defense()
+	var total_defense = base_defense + equip_defense
+	defense_label.text = "防御: %d (+%d)" % [total_defense, equip_defense] if equip_defense > 0 else "防御: %d" % total_defense
 
 func _on_health_changed(current: int, maximum: int) -> void:
 	hp_bar.max_value = maximum
 	hp_bar.value = current
-	hp_label.text = "HP: %d/%d" % [current, maximum]
+	hp_label.text = Utils.format_health(current, maximum)
 
 func _on_mana_changed(current: int, maximum: int) -> void:
 	mp_bar.max_value = maximum
 	mp_bar.value = current
-	mp_label.text = "MP: %d/%d" % [current, maximum]
+	mp_label.text = Utils.format_mana(current, maximum)
 
 func _on_level_up(new_level: int) -> void:
 	level_label.text = "Lv.%d" % new_level
 	exp_label.text = "EXP: %d/%d" % [player.experience, player.experience_to_next_level]
 
-func _on_inventory_changed(_item_id: String, _amount: int) -> void:
+func _on_inventory_changed(item_id: String, amount: int) -> void:
 	_update_inventory_display()
+
+func _on_equipment_changed(slot: String, item: Dictionary) -> void:
 	_update_stats()
 
-func _on_equipment_changed(_slot: String, _item: Dictionary) -> void:
-	_update_stats()
+func _on_gold_changed(new_amount: int) -> void:
+	gold_label.text = Utils.format_gold(new_amount)
 
 func _on_inventory_pressed() -> void:
 	if is_inventory_open:
@@ -116,7 +110,6 @@ func _open_inventory() -> void:
 	is_inventory_open = true
 	GameManager.is_inventory_open = true
 	inventory_panel.visible = true
-	# 等待一帧确保容器布局完成
 	await get_tree().process_frame
 	_update_inventory_display()
 
@@ -132,89 +125,74 @@ func _update_inventory_display() -> void:
 	for child in items_grid.get_children():
 		child.queue_free()
 	
-	# 使用新的物品系统获取所有物品（已堆叠）
-	var all_items: Array[Dictionary] = InventoryManager.get_all_items()
+	var all_items = InventoryManager.get_all_items()
 	
 	for item_data in all_items:
-		if item_data and item_data is Dictionary:
-			var button := Button.new()
-			var item_name: String = item_data.get("item_name", "Unknown")
-			var quantity: int = item_data.get("quantity", 1)
-			
-			# 显示名称和数量
-			if quantity > 1:
-				button.text = "%s\nx%d" % [item_name, quantity]
-			else:
-				button.text = item_name
-			
-			button.custom_minimum_size = Vector2(90, 70)
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			
-			# 创建物品字典的副本用于点击处理
-			var item_copy: Dictionary = item_data.duplicate()
-			item_copy.erase("quantity")
-			item_copy.erase("item_id")
-			
-			button.pressed.connect(_on_item_clicked.bind(item_copy))
-			items_grid.add_child(button)
+		_create_item_button(item_data)
+	
+	for slot in [GameConstants.SLOT_WEAPON, GameConstants.SLOT_ARMOR, GameConstants.SLOT_ACCESSORY]:
+		var equipped = InventoryManager.get_equipped_item(slot)
+		if equipped.size() > 0:
+			_create_equipped_button(equipped, slot)
 
-func _on_item_clicked(item: Dictionary) -> void:
-	var item_name: String = item.get("item_name", "Unknown")
-	print("Clicked: ", item_name)
+func _create_item_button(item_data: Dictionary) -> void:
+	var button = Button.new()
+	var item_name = item_data.get("item_name", "Unknown")
+	var quantity = item_data.get("quantity", 1)
+	var item_type = item_data.get("item_type", 0)
 	
-	var item_type: int = item.get("item_type", 0)
+	button.text = "%s x%d" % [item_name, quantity]
+	button.custom_minimum_size = Vector2(80, 80)
 	
-	if item_type == 0:
-		var heal_amount: int = item.get("heal_amount", 0)
-		var restore_mana: int = item.get("restore_mana_amount", 0)
-		
-		if heal_amount > 0 and player:
-			player.heal(heal_amount)
-			InventoryManager.remove_item(item, 1)
-			print("Used ", item_name, " healed ", heal_amount, " HP")
-		
-		if restore_mana > 0 and player:
-			player.restore_mana(restore_mana)
-			InventoryManager.remove_item(item, 1)
-			print("Used ", item_name, " restored ", restore_mana, " MP")
-			
-		_update_stats()
-		_update_inventory_display()
-		
-	elif item_type == 1:
-		InventoryManager.equip_item(item)
-		print("Equipped: ", item_name)
+	if item_type == GameConstants.ITEM_TYPE_EQUIPMENT:
+		button.pressed.connect(_on_equip_item.bind(item_data))
+	elif item_type == GameConstants.ITEM_TYPE_CONSUMABLE:
+		button.pressed.connect(_on_use_item.bind(item_data))
+	
+	items_grid.add_child(button)
+
+func _create_equipped_button(item_data: Dictionary, slot: int) -> void:
+	var button = Button.new()
+	button.text = "[E] %s" % item_data.get("item_name", "Unknown")
+	button.custom_minimum_size = Vector2(80, 80)
+	button.modulate = Color(0.8, 1.0, 0.8)
+	button.pressed.connect(_on_unequip_item.bind(slot))
+	items_grid.add_child(button)
+
+func _on_equip_item(item_data: Dictionary) -> void:
+	InventoryManager.equip_item(item_data)
+	_update_inventory_display()
+
+func _on_unequip_item(slot: int) -> void:
+	InventoryManager.unequip_item(slot)
+	_update_inventory_display()
+
+func _on_use_item(item_data: Dictionary) -> void:
+	var player = Utils.get_group_node("player")
+	if not player:
+		return
+	
+	var used = false
+	
+	if item_data.has("heal_amount") and item_data.heal_amount > 0:
+		if player.current_health < player.max_health:
+			player.heal(item_data.heal_amount)
+			used = true
+	
+	if item_data.has("restore_mana_amount") and item_data.restore_mana_amount > 0:
+		if player.current_mana < player.max_mana:
+			player.restore_mana(item_data.restore_mana_amount)
+			used = true
+	
+	if used:
+		var item_id = item_data.get("item_id", item_data.get("item_name", "unknown"))
+		InventoryManager.remove_item_by_id(item_id, 1)
 		_update_inventory_display()
 
 func _on_save_pressed() -> void:
 	GameManager.save_game()
 
 func _on_load_pressed() -> void:
-	GameManager.load_game()
-	_update_stats()
-	_update_inventory_display()
-
-func _add_default_items() -> void:
-	var potion := _create_item("生命药水", "恢复50点生命", 0, 50, 0)
-	var mana_potion := _create_item("魔法药水", "恢复30点魔法", 0, 0, 30)
-	var sword := _create_item("铁剑", "攻击力+10", 1, 10, 0)
-	var armor := _create_item("皮甲", "防御力+5", 1, 0, 0)
-	
-	InventoryManager.add_item(potion, 3)
-	InventoryManager.add_item(mana_potion, 2)
-	InventoryManager.add_item(sword, 1)
-	InventoryManager.add_item(armor, 1)
-	InventoryManager.gold = 100
-
-func _create_item(name: String, desc: String, type: int, heal: int, mana: int) -> Dictionary:
-	return {
-		"item_name": name,
-		"description": desc,
-		"item_type": type,
-		"heal_amount": heal,
-		"restore_mana_amount": mana,
-		"attack": 10 if "剑" in name else 0,
-		"defense": 5 if "甲" in name else 0,
-		"equipment_slot": 1 if "剑" in name else (2 if "甲" in name else 0),
-		"price": 50
-	}
+	if GameManager.load_game():
+		_update_stats()
+		_update_inventory_display()
