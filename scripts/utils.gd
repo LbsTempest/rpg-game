@@ -4,18 +4,10 @@
 
 extends Node
 
-func can_move_to(target_pos: Vector2, tilemap_group: String = "tilemap") -> bool:
-	var tilemap: TileMapLayer = Engine.get_main_loop().get_first_node_in_group(tilemap_group)
-	if not tilemap:
-		return true
-	
-	var tile_pos: Vector2i = tilemap.local_to_map(target_pos)
-	var tile_data = tilemap.get_cell_tile_data(tile_pos)
-	
-	if tile_data and tile_data.get_custom_data("collision"):
-		return false
-	
-	return true
+func can_move_to(target_pos: Vector2, tilemap_group: String = "tilemap", from_pos: Vector2 = Vector2.ZERO) -> bool:
+	if from_pos != Vector2.ZERO:
+		return MovementService.can_move_to_segment(from_pos, target_pos, "legacy")
+	return MapService.can_move_segment(target_pos, target_pos, "legacy", tilemap_group)
 
 func play_animation(sprite: AnimatedSprite2D, anim_name: String) -> void:
 	if not sprite or not sprite.sprite_frames:

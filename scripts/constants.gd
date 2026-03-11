@@ -5,7 +5,7 @@
 extends Node
 
 # Game Version
-const SAVE_VERSION := "2.0"
+const SAVE_VERSION := "3.0"
 
 # Window Settings
 const WINDOW_WIDTH := 1920
@@ -115,8 +115,8 @@ const ITEM_TYPE_KEY := 2
 const SHOP_MERCHANT := "merchant_shop"
 
 # Quest IDs
-const QUEST_FIRST := "quest_001"
-const QUEST_MERCHANT := "quest_002"
+const QUEST_FIRST := "quest_first"
+const QUEST_MERCHANT := "quest_merchant"
 
 # Default Names (for code use, display names are localized)
 const DEFAULT_ENEMY_NAME := "Enemy"

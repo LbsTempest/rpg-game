@@ -1,6 +1,7 @@
-[gd_scene format=3 uid="uid://nnmiupuoc5du"]
+[gd_scene load_steps=3 format=3 uid="uid://nnmiupuoc5du"]
 
 [ext_resource type="Script" uid="uid://bspffthjsdqrq" path="res://scripts/ui.gd" id="1_ui"]
+[ext_resource type="PackedScene" uid="uid://journal_screen_scene" path="res://scenes/ui/journal_screen.tscn" id="2_journal_screen"]
 
 [node name="UI" type="CanvasLayer" unique_id=220988765]
 script = ExtResource("1_ui")
@@ -72,6 +73,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "存档 (F5)"
 
+[node name="JournalButton" type="Button" parent="ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "任务日志"
+
 [node name="LoadButton" type="Button" parent="ButtonsHBox" unique_id=970960686]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -108,3 +114,5 @@ columns = 5
 [node name="CloseButton" type="Button" parent="InventoryPanel/InventoryVBox" unique_id=1425044208]
 layout_mode = 2
 text = "关闭"
+
+[node name="JournalScreen" parent="." instance=ExtResource("2_journal_screen")]

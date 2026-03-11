@@ -59,6 +59,7 @@ func start_dialogue(npc: Node) -> void:
 	is_showing_options = false
 	
 	dialogue_panel.visible = true
+	UIRouter.register_modal("dialogue", Callable(self, "_end_dialogue"), 60, true)
 	_clear_options()
 	_show_current_line()
 	
@@ -114,7 +115,7 @@ func _on_option_selected(option_index: int, option_data: Dictionary) -> void:
 	dialogue_option_selected.emit(option_index, option_data.get("text", ""))
 	
 	if option_data.has("action"):
-		var action_result = _execute_action(option_data["action"])
+		var action_result = _execute_action(option_data)
 		if action_result:
 			_end_dialogue()
 			return
@@ -131,19 +132,17 @@ func _on_option_selected(option_index: int, option_data: Dictionary) -> void:
 	_clear_options()
 	_show_current_line()
 
-func _execute_action(action: String) -> bool:
+func _execute_action(option_data: Dictionary) -> bool:
 	if current_npc == null:
 		return false
-	
-	match action:
-		"open_shop":
-			return current_npc.open_shop() if current_npc.has_method("open_shop") else false
-		"accept_quest":
-			return current_npc.accept_quest() if current_npc.has_method("accept_quest") else false
-		"reward_quest":
-			return current_npc.reward_quest() if current_npc.has_method("reward_quest") else false
-	
-	return false
+
+	var context := {
+		"source": "dialogue",
+		"npc": current_npc,
+		"dialogue_index": current_index
+	}
+	var result: Dictionary = TriggerRouter.execute_dialogue_option(option_data, context)
+	return result.get("success", false)
 
 func _clear_options() -> void:
 	for child in options_container.get_children():
@@ -167,6 +166,7 @@ func _end_dialogue() -> void:
 	is_showing_options = false
 	
 	dialogue_panel.visible = false
+	UIRouter.unregister_modal("dialogue")
 	_clear_options()
 	
 	dialogue_ended.emit()

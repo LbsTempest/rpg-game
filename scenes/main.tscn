@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://main_scene"]
+[gd_scene load_steps=10 format=3 uid="uid://main_scene"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://player_scene" path="res://scenes/player.tscn" id="2_player"]
@@ -7,9 +7,14 @@
 [ext_resource type="PackedScene" uid="uid://npc_villager" path="res://scenes/npcs/villager.tscn" id="5_villager"]
 [ext_resource type="PackedScene" uid="uid://skeleton_enemy" path="res://scenes/enemies/skeleton.tscn" id="6_skeleton"]
 [ext_resource type="PackedScene" uid="uid://merchant_npc" path="res://scenes/npcs/merchant.tscn" id="7_merchant"]
+[ext_resource type="PackedScene" uid="uid://world_root_scene" path="res://scenes/world/world_root.tscn" id="8_world_root"]
+[ext_resource type="PackedScene" uid="uid://interaction_shop_source" path="res://scenes/interaction/shop_source.tscn" id="9_shop_source"]
+[ext_resource type="PackedScene" uid="uid://interaction_quest_board_source" path="res://scenes/interaction/quest_board_source.tscn" id="10_quest_source"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
+
+[node name="WorldRoot" parent="." instance=ExtResource("8_world_root")]
 
 [node name="Player" parent="." groups=["player"] instance=ExtResource("2_player")]
 position = Vector2(128, 128)
@@ -27,3 +32,17 @@ position = Vector2(600, 400)
 
 [node name="Merchant" parent="." instance=ExtResource("7_merchant")]
 position = Vector2(300, 250)
+
+[node name="QuestBoardSource" parent="." instance=ExtResource("10_quest_source")]
+position = Vector2(700, 260)
+source_id = "board_village_001"
+action_payload = {
+"quest_id": "quest_first"
+}
+
+[node name="ShopSource" parent="." instance=ExtResource("9_shop_source")]
+position = Vector2(260, 290)
+source_id = "stall_village_merchant"
+action_payload = {
+"shop_id": "merchant_shop"
+}

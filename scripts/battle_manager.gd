@@ -39,9 +39,11 @@ func start_battle(enemy: Node2D) -> void:
 	battle_scene.flee_requested.connect(_on_flee_attempt)
 	battle_scene.skill_selected.connect(_on_skill_selected)
 	battle_scene.item_used.connect(_on_item_used)
+	UIRouter.register_modal("battle", Callable(), 100, true)
 	
 	battle_started.emit(enemy)
 	battle_log.emit("战斗开始！遭遇了 %s！" % enemy.enemy_name)
+	GameEvents.emit_domain_event("battle_started", {"enemy_name": enemy.enemy_name})
 	
 	_start_turn()
 
@@ -76,6 +78,7 @@ func end_battle(result: String) -> void:
 	
 	_cleanup_battle()
 	battle_ended.emit(result, rewards)
+	GameEvents.emit_domain_event("battle_ended", {"result": result, "rewards": rewards})
 
 func _cleanup_battle() -> void:
 	if _battle_scene:
@@ -86,6 +89,7 @@ func _cleanup_battle() -> void:
 	current_enemy = null
 	
 	get_tree().paused = false
+	UIRouter.unregister_modal("battle")
 	
 	var main_ui = Utils.get_group_node("ui")
 	if main_ui:

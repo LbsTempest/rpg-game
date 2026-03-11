@@ -85,7 +85,12 @@ func _process_quest_dialogue(data: Array) -> Array:
 			"text": "任务：%s" % quest.get("name", ""),
 			"type": "branch",
 			"options": [
-				{"text": "接受", "next": -1, "action": "accept_quest"},
+				{
+					"text": "接受",
+					"next": -1,
+					"action": "accept_quest",
+					"action_payload": {"quest_id": gives_quest}
+				},
 				{"text": "暂不接受", "next": -1}
 			]
 		})
@@ -99,7 +104,12 @@ func _process_quest_dialogue(data: Array) -> Array:
 				"text": "你完成了任务！这是你的奖励。",
 				"type": "branch",
 				"options": [
-					{"text": "领取奖励", "next": -1, "action": "reward_quest"},
+					{
+						"text": "领取奖励",
+						"next": -1,
+						"action": "reward_quest",
+						"action_payload": {"quest_id": completes_quest}
+					},
 					{"text": "稍后再领", "next": -1}
 				]
 			})
@@ -109,7 +119,12 @@ func _process_quest_dialogue(data: Array) -> Array:
 			"text": "想看看我的商品吗？",
 			"type": "branch",
 			"options": [
-				{"text": "打开商店", "next": -1, "action": "open_shop"},
+				{
+					"text": "打开商店",
+					"next": -1,
+					"action": "open_shop",
+					"action_payload": {"shop_id": shop_id}
+				},
 				{"text": "不用了", "next": -1}
 			]
 		})
@@ -153,7 +168,7 @@ func _physics_process(delta: float) -> void:
 		wander_direction = (spawn_position - position).normalized()
 	
 	var next_position = position + wander_direction * wander_speed * delta
-	if Utils.can_move_to(next_position):
+	if MovementService.can_move_to_segment(position, next_position, "npc"):
 		velocity = wander_direction * wander_speed
 		Utils.play_animation(animated_sprite, "walk")
 		animated_sprite.flip_h = wander_direction.x < 0

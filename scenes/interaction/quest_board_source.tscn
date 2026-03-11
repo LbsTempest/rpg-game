@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://interaction_quest_board_source"]
+
+[ext_resource type="Script" path="res://scripts/world/interaction_source.gd" id="1_interaction_source"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_quest_board"]
+radius = 24.0
+
+[node name="QuestBoardSource" type="Area2D"]
+script = ExtResource("1_interaction_source")
+source_id = "quest_board_source"
+action_id = "start_quest"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_quest_board")

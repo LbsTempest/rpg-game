@@ -13,11 +13,13 @@ extends CanvasLayer
 
 @onready var inventory_button := $ButtonsHBox/InventoryButton
 @onready var save_button := $ButtonsHBox/SaveButton
+@onready var journal_button := $ButtonsHBox/JournalButton
 @onready var load_button := $ButtonsHBox/LoadButton
 
 @onready var inventory_panel := $InventoryPanel
 @onready var items_grid := $InventoryPanel/InventoryVBox/ItemsScroll/ItemsGrid
 @onready var close_button := $InventoryPanel/InventoryVBox/CloseButton
+@onready var journal_screen: JournalScreen = $JournalScreen
 
 var player: Node
 var is_inventory_open: bool = false
@@ -37,18 +39,11 @@ func _ready() -> void:
 	
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	save_button.pressed.connect(_on_save_pressed)
+	journal_button.pressed.connect(_on_journal_pressed)
 	load_button.pressed.connect(_on_load_pressed)
 	close_button.pressed.connect(_on_close_inventory)
 	
 	_update_inventory_display()
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("open_inventory"):
-		_on_inventory_pressed()
-	if event.is_action_pressed("ui_focus_next") and Input.is_action_pressed("ui_accept"):
-		GameManager.save_game()
-	if event.is_action_pressed("ui_cancel") and is_inventory_open:
-		_close_inventory()
 
 func _update_stats() -> void:
 	if not player:
@@ -106,10 +101,14 @@ func _on_inventory_pressed() -> void:
 	else:
 		_open_inventory()
 
+func toggle_inventory_from_router() -> void:
+	_on_inventory_pressed()
+
 func _open_inventory() -> void:
 	is_inventory_open = true
 	GameManager.is_inventory_open = true
 	inventory_panel.visible = true
+	UIRouter.register_modal("inventory", Callable(self, "_close_inventory"), 20, true)
 	await get_tree().process_frame
 	_update_inventory_display()
 
@@ -117,6 +116,7 @@ func _close_inventory() -> void:
 	is_inventory_open = false
 	GameManager.is_inventory_open = false
 	inventory_panel.visible = false
+	UIRouter.unregister_modal("inventory")
 
 func _on_close_inventory() -> void:
 	_close_inventory()
@@ -192,7 +192,15 @@ func _on_use_item(item_data: Dictionary) -> void:
 func _on_save_pressed() -> void:
 	GameManager.save_game()
 
+func _on_journal_pressed() -> void:
+	journal_screen.toggle_screen()
+	if journal_screen.is_open():
+		GameEvents.emit_domain_event("journal_opened", {})
+	else:
+		GameEvents.emit_domain_event("journal_closed", {})
+
 func _on_load_pressed() -> void:
 	if GameManager.load_game():
 		_update_stats()
 		_update_inventory_display()
+		journal_screen.refresh()

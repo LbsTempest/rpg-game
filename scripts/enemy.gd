@@ -77,7 +77,7 @@ func _chase_player(player: Node, delta: float) -> void:
 	var direction: Vector2 = (player.position - position).normalized()
 	var next_position: Vector2 = position + direction * speed * delta
 	
-	if Utils.can_move_to(next_position):
+	if MovementService.can_move_to_segment(position, next_position, "enemy"):
 		velocity = direction * speed * 1.5
 		Utils.play_animation(animated_sprite, "walk")
 		animated_sprite.flip_h = direction.x < 0
@@ -101,7 +101,7 @@ func _wander(delta: float) -> void:
 		wander_direction = (spawn_position - position).normalized()
 	
 	var next_position := position + wander_direction * speed * delta
-	if Utils.can_move_to(next_position):
+	if MovementService.can_move_to_segment(position, next_position, "enemy"):
 		velocity = wander_direction * speed
 		Utils.play_animation(animated_sprite, "walk")
 		animated_sprite.flip_h = wander_direction.x < 0

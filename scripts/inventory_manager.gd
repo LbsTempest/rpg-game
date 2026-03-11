@@ -5,29 +5,51 @@ signal item_removed(item_id: String, amount: int)
 signal equipment_changed(slot: String, item: Dictionary)
 signal gold_changed(new_amount: int)
 
-var item_quantities: Dictionary = {}
-var item_definitions: Dictionary = {}
-var gold: int = 0
+var item_quantities: Dictionary:
+	get:
+		return _inventory_state().item_quantities
+	set(value):
+		_inventory_state().item_quantities = value
 
-var equipment: Dictionary = {
-	GameConstants.SLOT_WEAPON: null,
-	GameConstants.SLOT_ARMOR: null,
-	GameConstants.SLOT_ACCESSORY: null
-}
+var item_definitions: Dictionary:
+	get:
+		return _inventory_state().item_definitions
+	set(value):
+		_inventory_state().item_definitions = value
+
+var gold: int:
+	get:
+		return _inventory_state().gold
+	set(value):
+		_inventory_state().gold = value
+
+var equipment: Dictionary:
+	get:
+		return _inventory_state().equipment
+	set(value):
+		_inventory_state().equipment = value
+
+func _inventory_state():
+	return Session.run_state.inventory
+
+func reset_state() -> void:
+	_inventory_state().reset()
+	gold_changed.emit(gold)
 
 func add_item(item: Dictionary, amount: int = 1) -> bool:
 	var item_id: String = _get_item_id(item)
-	
+
 	if not item_definitions.has(item_id):
-		item_definitions[item_id] = item
-	
+		item_definitions[item_id] = item.duplicate(true)
+
 	if not item_quantities.has(item_id) and item_quantities.size() >= GameConstants.MAX_UNIQUE_ITEMS:
 		return false
-	
+
+	var max_stack: int = item.get("max_stack", GameConstants.MAX_STACK_SIZE)
 	var current_qty: int = item_quantities.get(item_id, 0)
-	var new_qty: int = min(current_qty + amount, GameConstants.MAX_STACK_SIZE)
+	var new_qty: int = min(current_qty + amount, max_stack)
 	item_quantities[item_id] = new_qty
-	
+
 	item_added.emit(item_id, amount)
 	return true
 
@@ -37,18 +59,18 @@ func remove_item(item: Dictionary, amount: int = 1) -> bool:
 func remove_item_by_id(item_id: String, amount: int = 1) -> bool:
 	if not item_quantities.has(item_id):
 		return false
-	
+
 	var current_qty: int = item_quantities[item_id]
 	if current_qty < amount:
 		return false
-	
+
 	var new_qty: int = current_qty - amount
 	if new_qty <= 0:
 		item_quantities.erase(item_id)
 		item_definitions.erase(item_id)
 	else:
 		item_quantities[item_id] = new_qty
-	
+
 	item_removed.emit(item_id, amount)
 	return true
 
@@ -70,7 +92,7 @@ func get_item_data(item_id: String) -> Dictionary:
 func get_all_items() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for item_id in item_quantities:
-		var item_data: Dictionary = item_definitions.get(item_id, {}).duplicate()
+		var item_data: Dictionary = item_definitions.get(item_id, {}).duplicate(true)
 		item_data["item_id"] = item_id
 		item_data["quantity"] = item_quantities[item_id]
 		result.append(item_data)
@@ -83,13 +105,13 @@ func equip_item(item: Dictionary) -> bool:
 	var slot: int = item.get("equipment_slot", 0)
 	if slot == 0:
 		return false
-	
+
 	if equipment[slot]:
 		unequip_item(slot)
-	
-	equipment[slot] = item
+
+	equipment[slot] = item.duplicate(true)
 	remove_item(item, 1)
-	
+
 	equipment_changed.emit(get_slot_name(slot), item)
 	return true
 
@@ -141,24 +163,8 @@ func get_slot_name(slot: int) -> String:
 	return ""
 
 func get_save_data() -> Dictionary:
-	return {
-		"item_quantities": item_quantities.duplicate(),
-		"item_definitions": item_definitions.duplicate(true),
-		"equipment": equipment.duplicate(true),
-		"gold": gold
-	}
+	return _inventory_state().to_save_data()
 
 func load_save_data(data: Dictionary) -> void:
-	item_quantities.clear()
-	item_definitions.clear()
-	gold = data.get("gold", 0)
-	
-	if data.has("item_quantities"):
-		item_quantities = data.item_quantities.duplicate()
-	
-	if data.has("item_definitions"):
-		item_definitions = data.item_definitions.duplicate(true)
-	
-	if data.has("equipment"):
-		for slot_key in data.equipment:
-			equipment[int(slot_key)] = data.equipment[slot_key]
+	_inventory_state().load_save_data(data)
+	gold_changed.emit(gold)

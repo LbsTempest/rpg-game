@@ -6,26 +6,40 @@ signal quest_completed(quest_id: String)
 signal quest_rewarded(quest_id: String)
 
 var quest_database: Dictionary = {}
-var active_quests: Dictionary = {}
-var completed_quests: Array[String] = []
-var rewarded_quests: Array[String] = []
 
-var _items_data: Node = null
+var active_quests: Dictionary:
+	get:
+		return _quest_state().active_quests
+	set(value):
+		_quest_state().active_quests = value
+
+var completed_quests: Array[String]:
+	get:
+		return _quest_state().completed_quests
+	set(value):
+		_quest_state().completed_quests = value
+
+var rewarded_quests: Array[String]:
+	get:
+		return _quest_state().rewarded_quests
+	set(value):
+		_quest_state().rewarded_quests = value
 
 func _ready() -> void:
 	_initialize_quest_database()
 
+func _quest_state():
+	return Session.run_state.quest
+
 func _initialize_quest_database() -> void:
-	var quests_data = load("res://resources/data/quests_data.gd").new()
-	quest_database = quests_data.quest_database.duplicate(true)
-	quests_data.free()
+	quest_database = ContentDB.get_all_quests()
 
 func can_start_quest(quest_id: String) -> bool:
 	if not quest_database.has(quest_id):
 		return false
 	if active_quests.has(quest_id) or completed_quests.has(quest_id) or rewarded_quests.has(quest_id):
 		return false
-	
+
 	var quest_def = quest_database[quest_id]
 	for prereq in quest_def.get("prerequisites", []):
 		if not rewarded_quests.has(prereq):
@@ -35,21 +49,22 @@ func can_start_quest(quest_id: String) -> bool:
 func start_quest(quest_id: String) -> bool:
 	if not can_start_quest(quest_id):
 		return false
-	
+
 	var quest_def = quest_database[quest_id].duplicate(true)
 	quest_def["status"] = "active"
 	active_quests[quest_id] = quest_def
-	
+
 	quest_started.emit(quest_id)
+	GameEvents.emit_domain_event("quest_started", {"quest_id": quest_id})
 	return true
 
 func update_quest(quest_id: String, objective_type: String, target: String, amount: int = 1) -> void:
 	if not active_quests.has(quest_id):
 		return
-	
+
 	var quest = active_quests[quest_id]
 	var updated = false
-	
+
 	for i in range(quest["objectives"].size()):
 		var obj = quest["objectives"][i]
 		if obj["type"] == objective_type and obj["target"] == target:
@@ -58,8 +73,18 @@ func update_quest(quest_id: String, objective_type: String, target: String, amou
 				obj["description"] = _generate_objective_description(obj)
 				updated = true
 				quest_updated.emit(quest_id, i)
+				GameEvents.emit_domain_event(
+					"quest_progress_updated",
+					{
+						"quest_id": quest_id,
+						"objective_index": i,
+						"type": objective_type,
+						"target": target,
+						"amount": amount
+					}
+				)
 				break
-	
+
 	if updated and _is_quest_complete(quest):
 		_complete_quest(quest_id)
 
@@ -76,50 +101,46 @@ func _is_quest_complete(quest: Dictionary) -> bool:
 func _complete_quest(quest_id: String) -> void:
 	if not active_quests.has(quest_id):
 		return
-	
+
 	var quest = active_quests[quest_id]
 	quest["status"] = "completed"
-	
+
 	active_quests.erase(quest_id)
 	completed_quests.append(quest_id)
-	
+
 	quest_completed.emit(quest_id)
+	GameEvents.emit_domain_event("quest_completed", {"quest_id": quest_id})
 
 func reward_quest(quest_id: String) -> bool:
 	if not completed_quests.has(quest_id):
 		return false
-	
+
 	var quest_def = quest_database[quest_id]
 	var rewards = quest_def.get("rewards", {})
-	
+
 	if rewards.has("experience") and rewards["experience"] > 0:
 		var player = Utils.get_group_node("player")
 		if player and player.has_method("add_experience"):
 			player.add_experience(rewards["experience"])
-	
+
 	if rewards.has("gold") and rewards["gold"] > 0:
 		InventoryManager.add_gold(rewards["gold"])
-	
+
 	if rewards.has("items"):
 		for item_reward in rewards["items"]:
 			var item_data = _get_item_data_by_id(item_reward["id"])
 			if item_data:
 				InventoryManager.add_item(item_data, item_reward["quantity"])
-	
+
 	completed_quests.erase(quest_id)
 	rewarded_quests.append(quest_id)
-	
+
 	quest_rewarded.emit(quest_id)
+	GameEvents.emit_domain_event("quest_rewarded", {"quest_id": quest_id})
 	return true
 
 func _get_item_data_by_id(item_id: String) -> Dictionary:
-	if _items_data == null:
-		_items_data = load("res://resources/data/items_data.gd").new()
-	
-	if _items_data.items_database.has(item_id):
-		return _items_data.items_database[item_id].duplicate()
-	
-	return {}
+	return ContentDB.get_item_definition(item_id)
 
 func _generate_objective_description(obj: Dictionary) -> String:
 	var desc = obj.get("description", "")
@@ -133,7 +154,7 @@ func _generate_objective_description(obj: Dictionary) -> String:
 				desc = "与 %s 对话" % obj["target"]
 			GameConstants.OBJECTIVE_LOCATION:
 				desc = "到达 %s" % obj["target"]
-	
+
 	return "%s (%d/%d)" % [desc, obj["current"], obj["required"]]
 
 func get_active_quests() -> Array[Dictionary]:
@@ -159,35 +180,14 @@ func get_quest_status(quest_id: String) -> String:
 	return "inactive"
 
 func get_save_data() -> Dictionary:
-	return {
-		"active_quests": active_quests.duplicate(true),
-		"completed_quests": completed_quests.duplicate(),
-		"rewarded_quests": rewarded_quests.duplicate()
-	}
+	return _quest_state().to_save_data()
 
 func load_save_data(data: Dictionary) -> void:
-	active_quests.clear()
-	completed_quests.clear()
-	rewarded_quests.clear()
-	
-	if data.has("active_quests"):
-		active_quests = data["active_quests"].duplicate(true)
-	
-	if data.has("completed_quests"):
-		for quest_id in data["completed_quests"]:
-			if quest_id is String:
-				completed_quests.append(quest_id)
-	
-	if data.has("rewarded_quests"):
-		for quest_id in data["rewarded_quests"]:
-			if quest_id is String:
-				rewarded_quests.append(quest_id)
+	_quest_state().load_save_data(data)
 
 func add_quest_definition(quest_def: Dictionary) -> void:
 	if quest_def.has("id"):
 		quest_database[quest_def["id"]] = quest_def.duplicate(true)
 
 func reset_all_quests() -> void:
-	active_quests.clear()
-	completed_quests.clear()
-	rewarded_quests.clear()
+	_quest_state().reset()
