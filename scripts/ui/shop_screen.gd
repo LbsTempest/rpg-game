@@ -1,4 +1,4 @@
-class_name ShopUIController
+class_name ShopScreen
 extends Panel
 
 signal item_selected(item_id: String, item_data: Dictionary)
@@ -27,7 +27,7 @@ func _ready() -> void:
 func _ensure_initialized() -> void:
 	if _initialized:
 		return
-	
+
 	title_label = get_node("VBoxContainer/TitleLabel")
 	gold_label = get_node("VBoxContainer/GoldLabel")
 	item_list = get_node("VBoxContainer/ScrollContainer/ItemList")
@@ -37,12 +37,12 @@ func _ensure_initialized() -> void:
 	sell_button = get_node("VBoxContainer/ModeHBox/SellButton")
 	confirm_button = get_node("VBoxContainer/ActionHBox/ConfirmButton")
 	close_button = get_node("VBoxContainer/ActionHBox/CloseButton")
-	
+
 	buy_button.pressed.connect(_on_buy_mode)
 	sell_button.pressed.connect(_on_sell_mode)
 	confirm_button.pressed.connect(_on_confirm)
 	close_button.pressed.connect(_on_close)
-	
+
 	_initialized = true
 
 func setup(shop_name: String, current_gold: int) -> void:
@@ -68,7 +68,7 @@ func clear_item_list() -> void:
 
 func add_item_button(item_id: String, display_text: String, item_data: Dictionary) -> void:
 	_ensure_initialized()
-	var button = Button.new()
+	var button := Button.new()
 	button.text = display_text
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.pressed.connect(_on_item_selected.bind(item_id, item_data))

@@ -15,6 +15,7 @@ signal quest_completed(quest_id: String)
 @export var completes_quest: String = ""
 @export var is_merchant: bool = false
 @export var shop_id: String = ""
+@export var story_segment_id: String = ""
 
 @export var dialogue_data: Array = []
 
@@ -76,11 +77,14 @@ func get_dialogue_data() -> Array:
 		data.append({"text": line, "type": "normal"})
 	return _process_quest_dialogue(data)
 
+func get_story_segment_id() -> String:
+	return story_segment_id
+
 func _process_quest_dialogue(data: Array) -> Array:
 	var processed = data.duplicate(true)
 	
-	if not gives_quest.is_empty() and QuestManager.can_start_quest(gives_quest):
-		var quest = QuestManager.get_quest(gives_quest)
+	if not gives_quest.is_empty() and QuestService.can_start_quest(gives_quest):
+		var quest = QuestService.get_quest(gives_quest)
 		processed.append({
 			"text": "任务：%s" % quest.get("name", ""),
 			"type": "branch",
@@ -98,7 +102,7 @@ func _process_quest_dialogue(data: Array) -> Array:
 		processed.append({"text": "祝你好运！", "type": "normal"})
 	
 	if not completes_quest.is_empty():
-		var status = QuestManager.get_quest_status(completes_quest)
+		var status = QuestService.get_quest_status(completes_quest)
 		if status == "completed":
 			processed.append({
 				"text": "你完成了任务！这是你的奖励。",
@@ -132,7 +136,7 @@ func _process_quest_dialogue(data: Array) -> Array:
 	return processed
 
 func _physics_process(delta: float) -> void:
-	if is_dialogue_active or DialogueManager.is_active or GameManager.is_inventory_open:
+	if is_dialogue_active or DialogueManager.is_active or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		Utils.play_animation(animated_sprite, "idle")
 		move_and_slide()
@@ -185,7 +189,7 @@ func _on_player_entered(body: Node2D) -> void:
 		Utils.play_animation(animated_sprite, "idle")
 		animated_sprite.flip_h = body.position.x < position.x
 		
-		QuestManager.update_all_quests(GameConstants.OBJECTIVE_TALK, npc_name, 1)
+		QuestService.update_progress(GameConstants.OBJECTIVE_TALK, npc_name, 1)
 		
 		DialogueManager.start_dialogue(self)
 
@@ -193,7 +197,7 @@ func accept_quest() -> bool:
 	if gives_quest.is_empty():
 		return false
 	
-	if QuestManager.start_quest(gives_quest):
+	if QuestService.accept_quest(gives_quest).get("success", false):
 		quest_given.emit(gives_quest)
 		return true
 	return false
@@ -202,7 +206,7 @@ func reward_quest() -> bool:
 	if completes_quest.is_empty():
 		return false
 	
-	if QuestManager.reward_quest(completes_quest):
+	if QuestService.turn_in_quest(completes_quest).get("success", false):
 		quest_completed.emit(completes_quest)
 		return true
 	return false
@@ -211,7 +215,7 @@ func open_shop() -> bool:
 	if not is_merchant or shop_id.is_empty():
 		return false
 	
-	if ShopManager.open_shop(shop_id):
+	if ShopService.open_shop(shop_id).get("success", false):
 		shop_requested.emit(shop_id)
 		return true
 	return false

@@ -15,7 +15,7 @@ func _ready() -> void:
 	load_game_button.pressed.connect(_on_load_game_pressed)
 	exit_button.pressed.connect(_on_exit_pressed)
 	
-	if not GameManager.has_save_file():
+	if not App.has_save_file():
 		load_game_button.disabled = true
 		load_game_button.modulate = Color(0.5, 0.5, 0.5, 1.0)
 	
@@ -23,11 +23,11 @@ func _ready() -> void:
 	new_game_button.grab_focus()
 
 func _on_new_game_pressed() -> void:
-	GameManager.start_new_game()
+	App.start_new_game()
 	new_game_started.emit()
 
 func _on_load_game_pressed() -> void:
-	if GameManager.load_game():
+	if App.load_game():
 		load_game_requested.emit()
 		get_tree().change_scene_to_file(GameConstants.SCENE_MAIN)
 	else:

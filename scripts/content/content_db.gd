@@ -6,6 +6,7 @@ var _quests: Dictionary = {}
 var _shops: Dictionary = {}
 var _story_segments: Dictionary = {}
 var _maps: Dictionary = {}
+var _encounters: Dictionary = {}
 var _player_defaults: Dictionary = {}
 
 func _ready() -> void:
@@ -19,6 +20,7 @@ func reload() -> void:
 	_shops = payload.get("shops", {})
 	_story_segments = payload.get("story", {})
 	_maps = payload.get("maps", {})
+	_encounters = payload.get("encounters", {})
 	_player_defaults = payload.get("player_defaults", {})
 
 func get_all_items() -> Dictionary:
@@ -68,6 +70,12 @@ func get_all_maps() -> Dictionary:
 
 func get_map_definition(map_id: String) -> Dictionary:
 	return _maps.get(map_id, {}).duplicate(true)
+
+func get_all_encounters() -> Dictionary:
+	return _encounters.duplicate(true)
+
+func get_encounter_definition(encounter_id: String) -> Dictionary:
+	return _encounters.get(encounter_id, {}).duplicate(true)
 
 func get_player_defaults() -> Dictionary:
 	return _player_defaults.duplicate(true)

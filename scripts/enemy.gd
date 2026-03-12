@@ -52,7 +52,7 @@ func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 	
-	if BattleManager.is_in_battle or DialogueManager.is_active or GameManager.is_inventory_open:
+	if BattleManager.is_in_battle or DialogueManager.is_active or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		Utils.play_animation(animated_sprite, "idle")
 		return

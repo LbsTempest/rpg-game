@@ -106,7 +106,7 @@ func toggle_inventory_from_router() -> void:
 
 func _open_inventory() -> void:
 	is_inventory_open = true
-	GameManager.is_inventory_open = true
+	App.is_inventory_open = true
 	inventory_panel.visible = true
 	UIRouter.register_modal("inventory", Callable(self, "_close_inventory"), 20, true)
 	await get_tree().process_frame
@@ -114,7 +114,7 @@ func _open_inventory() -> void:
 
 func _close_inventory() -> void:
 	is_inventory_open = false
-	GameManager.is_inventory_open = false
+	App.is_inventory_open = false
 	inventory_panel.visible = false
 	UIRouter.unregister_modal("inventory")
 
@@ -190,7 +190,7 @@ func _on_use_item(item_data: Dictionary) -> void:
 		_update_inventory_display()
 
 func _on_save_pressed() -> void:
-	GameManager.save_game()
+	App.save_game()
 
 func _on_journal_pressed() -> void:
 	journal_screen.toggle_screen()
@@ -200,7 +200,7 @@ func _on_journal_pressed() -> void:
 		GameEvents.emit_domain_event("journal_closed", {})
 
 func _on_load_pressed() -> void:
-	if GameManager.load_game():
+	if App.load_game():
 		_update_stats()
 		_update_inventory_display()
 		journal_screen.refresh()

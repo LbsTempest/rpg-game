@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://shop_ui_scene"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/shop_ui_controller.gd" id="1_shopui"]
+[ext_resource type="Script" path="res://scripts/ui/shop_screen.gd" id="1_shopui"]
 
-[node name="ShopUI" type="Panel"]
+[node name="ShopScreen" type="Panel"]
 process_mode = 3
 anchors_preset = 8
 anchor_left = 0.5

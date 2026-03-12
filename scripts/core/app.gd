@@ -3,6 +3,7 @@ extends Node
 signal game_saved
 signal game_loaded
 signal new_game_started
+signal cycle_started(cycle_index: int, summary: Dictionary)
 
 var current_scene_name: String:
 	get:
@@ -31,9 +32,21 @@ func start_new_game() -> void:
 	new_game_started.emit()
 	change_scene(GameConstants.SCENE_MAIN)
 
+func start_new_cycle() -> Dictionary:
+	is_new_game = true
+	var result: Dictionary = CycleService.start_new_cycle("0")
+	if not result.get("success", false):
+		return result
+
+	current_scene_name = "main"
+	new_game_started.emit()
+	cycle_started.emit(Session.profile.cycle_index, result.get("data", {}).get("summary", {}))
+	change_scene(GameConstants.SCENE_MAIN)
+	return result
+
 func _reset_all_managers() -> void:
-	QuestManager.reset_all_quests()
-	ShopManager.reset_all()
+	QuestService.reset_state()
+	ShopService.reset_state()
 	SkillManager.reset_skills()
 	InventoryManager.reset_state()
 	_give_starting_items()

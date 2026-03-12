@@ -11,5 +11,6 @@ func load_content() -> Dictionary:
 		"shops": ShopCatalog.new().load_definitions(),
 		"story": StoryCatalog.new().load_definitions(),
 		"maps": MapCatalog.new().load_definitions(),
+		"encounters": EncounterCatalog.new().load_definitions(),
 		"player_defaults": player_defaults.defaults.duplicate(true)
 	}

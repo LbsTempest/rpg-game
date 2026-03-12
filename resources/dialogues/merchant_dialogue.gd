@@ -5,7 +5,7 @@ extends Node
 # 当NPC开始对话时，通过信号通知NPC脚本打开商店
 
 # 可以通过以下方式触发商店：
-# 在NPC脚本中调用 ShopManager.open_shop("merchant_shop")
+# 在NPC脚本中调用 ShopService.open_shop("merchant_shop")
 
 # 这里保留对话数据用于欢迎语
 @export var dialogue_data: Array = [

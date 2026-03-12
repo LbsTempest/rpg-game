@@ -16,6 +16,7 @@ func serialize(run_state) -> Dictionary:
 		"story": {
 			"flags": run_state.story.flags.duplicate(true),
 			"current_segment_id": run_state.story.current_segment_id,
+			"current_step_index": run_state.story.current_step_index,
 			"branch_choices": run_state.story.branch_choices.duplicate(true)
 		},
 		"enemies": run_state.world.to_save_data()
@@ -54,6 +55,7 @@ func deserialize(data: Dictionary, run_state) -> void:
 		var story_data: Dictionary = data["story"]
 		run_state.story.flags = story_data.get("flags", {}).duplicate(true)
 		run_state.story.current_segment_id = story_data.get("current_segment_id", "")
+		run_state.story.current_step_index = int(story_data.get("current_step_index", 0))
 		run_state.story.branch_choices = story_data.get("branch_choices", {}).duplicate(true)
 
 	if data.has("enemies"):

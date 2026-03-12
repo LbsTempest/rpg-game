@@ -1,4 +1,6 @@
 extends Node
+# Legacy battle entrypoint kept as compatibility facade for scenes/UI.
+# New battle domain logic should live in scripts/battle/*.
 
 signal battle_started(enemy: Node2D)
 signal battle_ended(result: String, rewards: Dictionary)
@@ -82,8 +84,53 @@ func end_battle(result: String) -> void:
 	GameEvents.emit_domain_event("battle_ended", {"result": result, "rewards": rewards})
 
 func start_encounter(encounter_id: String) -> bool:
-	push_warning("Encounter definitions are not implemented yet: %s" % encounter_id)
-	return false
+	if is_in_battle:
+		return false
+
+	var encounter_definition: Dictionary = ContentDB.get_encounter_definition(encounter_id)
+	if encounter_definition.is_empty():
+		push_warning("Encounter definition not found: %s" % encounter_id)
+		return false
+
+	player = Utils.get_group_node("player")
+	if player == null:
+		push_warning("Player node not found when starting encounter: %s" % encounter_id)
+		return false
+
+	var enemy_scene_paths: Array = encounter_definition.get("enemy_scene_paths", [])
+	if enemy_scene_paths.is_empty():
+		push_warning("Encounter has no enemy scenes: %s" % encounter_id)
+		return false
+
+	current_session = _encounter_service.create_content_encounter([player], enemy_scene_paths)
+	if current_session == null:
+		return false
+
+	is_in_battle = true
+	current_enemy = null
+
+	get_tree().paused = true
+	var main_ui = Utils.get_group_node("ui")
+	if main_ui:
+		main_ui.visible = false
+
+	var battle_scene = preload(BATTLE_SCENE_PATH).instantiate()
+	_battle_scene = battle_scene
+	battle_scene.process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().root.add_child(battle_scene)
+
+	battle_scene.initialize(get_battle_view_data())
+	battle_scene.action_selected.connect(_on_player_action)
+	battle_scene.flee_requested.connect(_on_flee_attempt)
+	battle_scene.skill_selected.connect(_on_skill_selected)
+	battle_scene.item_used.connect(_on_item_used)
+	UIRouter.register_modal("battle", Callable(), 100, true)
+
+	battle_started.emit(null)
+	_append_log("战斗开始！")
+	GameEvents.emit_domain_event("battle_started", {"encounter_id": encounter_id})
+	_start_player_turn()
+	return true
 
 func list_player_combatants() -> Array[Dictionary]:
 	if current_session == null:

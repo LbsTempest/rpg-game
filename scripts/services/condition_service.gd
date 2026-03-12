@@ -47,28 +47,32 @@ func _check_flags(conditions: Dictionary) -> Dictionary:
 	return {"passed": true, "reason": ""}
 
 func _check_cycle(conditions: Dictionary) -> Dictionary:
-	var cycle_index: int = Session.profile.cycle_index
+	if not conditions.has("min_cycle") and not conditions.has("max_cycle"):
+		return {"passed": true, "reason": ""}
+
+	var available: bool = CycleService.is_content_available("", conditions)
+	if available:
+		return {"passed": true, "reason": ""}
+
+	var cycle_index: int = CycleService.get_cycle_index()
 	var min_cycle: int = int(conditions.get("min_cycle", -1))
 	var max_cycle: int = int(conditions.get("max_cycle", -1))
-
 	if min_cycle >= 0 and cycle_index < min_cycle:
 		return {"passed": false, "reason": "cycle_too_low"}
-
 	if max_cycle >= 0 and cycle_index > max_cycle:
 		return {"passed": false, "reason": "cycle_too_high"}
-
-	return {"passed": true, "reason": ""}
+	return {"passed": false, "reason": "cycle_constraint_failed"}
 
 func _check_quests(conditions: Dictionary) -> Dictionary:
 	for quest_id in conditions.get("requires_quests", []):
-		var status := QuestManager.get_quest_status(String(quest_id))
+		var status := QuestService.get_quest_status(String(quest_id))
 		if status != "rewarded":
 			return {"passed": false, "reason": "required_quest_not_rewarded:" + String(quest_id)}
 
 	var required_status_map: Dictionary = conditions.get("quest_status", {})
 	for quest_id in required_status_map:
 		var expected_status: String = String(required_status_map[quest_id])
-		var actual_status: String = QuestManager.get_quest_status(String(quest_id))
+		var actual_status: String = QuestService.get_quest_status(String(quest_id))
 		if actual_status != expected_status:
 			return {"passed": false, "reason": "quest_status_mismatch:" + String(quest_id)}
 

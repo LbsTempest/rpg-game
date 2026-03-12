@@ -10,6 +10,14 @@ func execute(action_id: String, payload: Dictionary = {}, context: Dictionary = 
 			result = _execute_start_quest(payload, context)
 		"reward_quest", "turn_in_quest":
 			result = _execute_reward_quest(payload, context)
+		"start_story_segment":
+			result = _execute_start_story_segment(payload)
+		"advance_story":
+			result = _execute_advance_story()
+		"choose_story_branch":
+			result = _execute_choose_story_branch(payload)
+		"start_new_cycle":
+			result = _execute_start_new_cycle(payload)
 		"set_story_flag":
 			result = _execute_set_story_flag(payload)
 		"clear_story_flag":
@@ -92,33 +100,29 @@ func _execute_reward_quest(payload: Dictionary, context: Dictionary) -> Dictiona
 	return result
 
 func _execute_set_story_flag(payload: Dictionary) -> Dictionary:
-	var result := {"success": false, "message": "", "data": {}}
-	var flag_id: String = payload.get("flag_id", "")
-	if flag_id.is_empty():
-		result.message = "missing_flag_id"
-		return result
-
-	var value: bool = bool(payload.get("value", true))
-	Session.run_state.story.flags[flag_id] = value
-	result.success = true
-	result.message = "flag_set"
-	result.data = {"flag_id": flag_id, "value": value}
-	GameEvents.emit_domain_event("story_flag_changed", result.data)
-	return result
+	return StoryService.set_story_flag(String(payload.get("flag_id", "")), bool(payload.get("value", true)))
 
 func _execute_clear_story_flag(payload: Dictionary) -> Dictionary:
-	var result := {"success": false, "message": "", "data": {}}
-	var flag_id: String = payload.get("flag_id", "")
-	if flag_id.is_empty():
-		result.message = "missing_flag_id"
-		return result
+	return StoryService.clear_story_flag(String(payload.get("flag_id", "")))
 
-	Session.run_state.story.flags.erase(flag_id)
-	result.success = true
-	result.message = "flag_cleared"
-	result.data = {"flag_id": flag_id}
-	GameEvents.emit_domain_event("story_flag_changed", {"flag_id": flag_id, "value": false})
-	return result
+func _execute_start_story_segment(payload: Dictionary) -> Dictionary:
+	var segment_id: String = payload.get("segment_id", "")
+	if segment_id.is_empty():
+		return {"success": false, "message": "missing_segment_id", "data": {}}
+	return StoryService.start_story_segment(segment_id)
+
+func _execute_advance_story() -> Dictionary:
+	return StoryService.advance_story()
+
+func _execute_choose_story_branch(payload: Dictionary) -> Dictionary:
+	var branch_id: String = payload.get("branch_id", "")
+	if branch_id.is_empty():
+		return {"success": false, "message": "missing_branch_id", "data": {}}
+	return StoryService.choose_story_branch(branch_id)
+
+func _execute_start_new_cycle(payload: Dictionary) -> Dictionary:
+	var profile_slot_id: String = String(payload.get("profile_slot_id", "0"))
+	return CycleService.start_new_cycle(profile_slot_id)
 
 func _execute_grant_gold(payload: Dictionary) -> Dictionary:
 	var result := {"success": false, "message": "", "data": {}}

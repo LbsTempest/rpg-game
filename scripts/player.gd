@@ -28,19 +28,19 @@ var _is_defending: bool = false
 @onready var animated_sprite := $AnimatedSprite2D
 
 func _ready() -> void:
-	if GameManager.is_new_game:
+	if App.is_new_game:
 		current_health = max_health
 		current_mana = max_mana
 		experience_to_next_level = _calculate_exp_requirement()
 		_sync_state_to_session()
 	else:
-		GameManager.apply_player_save_data(self)
+		App.apply_player_save_data(self)
 		experience_to_next_level = _calculate_exp_requirement()
 
 	_update_ui()
 
 func _physics_process(delta: float) -> void:
-	if DialogueManager.is_active or BattleManager.is_in_battle or GameManager.is_inventory_open:
+	if DialogueManager.is_active or BattleManager.is_in_battle or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		_play_idle_animation()
 		move_and_slide()

@@ -1,4 +1,6 @@
 extends Node
+# Legacy compatibility manager.
+# Keep runtime behavior stable for existing scenes; prefer state/services for new logic.
 
 signal item_added(item_id: String, amount: int)
 signal item_removed(item_id: String, amount: int)

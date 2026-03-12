@@ -1,4 +1,5 @@
 extends Node
+# Legacy enemy persistence manager retained for compatibility.
 
 var enemy_states: Dictionary:
 	get:

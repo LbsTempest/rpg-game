@@ -5,12 +5,12 @@ func _input(event: InputEvent) -> void:
 		if UIRouter.close_top_modal():
 			get_viewport().set_input_as_handled()
 			return
-		GameManager.toggle_pause()
+		App.toggle_pause()
 		get_viewport().set_input_as_handled()
 		return
 
 	if event.is_action_pressed("ui_focus_next") and Input.is_action_pressed("ui_accept"):
-		GameManager.save_game()
+		App.save_game()
 		get_viewport().set_input_as_handled()
 		return
 
