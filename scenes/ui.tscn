@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://nnmiupuoc5du"]
+[gd_scene load_steps=4 format=3 uid="uid://nnmiupuoc5du"]
 
-[ext_resource type="Script" uid="uid://bspffthjsdqrq" path="res://scripts/ui.gd" id="1_ui"]
+[ext_resource type="Script" path="res://scripts/ui/hud_screen.gd" id="1_ui"]
 [ext_resource type="PackedScene" uid="uid://journal_screen_scene" path="res://scenes/ui/journal_screen.tscn" id="2_journal_screen"]
+[ext_resource type="Script" path="res://scripts/ui/inventory_screen.gd" id="3_inventory_screen"]
 
 [node name="UI" type="CanvasLayer" unique_id=220988765]
 script = ExtResource("1_ui")
@@ -89,6 +90,7 @@ offset_left = 400.0
 offset_top = 100.0
 offset_right = 900.0
 offset_bottom = 500.0
+script = ExtResource("3_inventory_screen")
 
 [node name="InventoryVBox" type="VBoxContainer" parent="InventoryPanel" unique_id=168213931]
 layout_mode = 2

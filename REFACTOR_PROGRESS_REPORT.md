@@ -1,15 +1,15 @@
 # RPG 重构进展报告（可交接版）
 
 ## 1. 报告元信息
-- 项目路径：`C:\Users\16411\Code\rpg-game`
-- 基准提交：`33298cc`（`main`）
-- 报告日期：2026-03-12
-- 参考文档：`REFACTOR_CHECKLIST.md`
+- 项目路径：`C:\Users\lbs\Code\rpg_game`
+- 参考清单：`REFACTOR_CHECKLIST.md`
+- 报告日期：2026-03-14
+- 当前状态：工作区存在未提交改动（处于重构收口阶段）
 
 ---
 
 ## 2. 一句话现状
-当前已完成 **Phase 1 ~ Phase 11 的主体迁移与清理**，项目可运行、可导入；接下来应进入 **Phase 12（文档/测试/回归保障）**。
+当前已完成 **Phase 1 ~ Phase 11 的主体迁移与大部分清理**，并通过导入验证；正在推进 **Phase 12（文档/测试/回归保障）** 与最终收口。
 
 ---
 
@@ -17,198 +17,111 @@
 
 ## Phase 1 - ContentDB 统一内容定义
 **状态：已完成（核心）**
-- 已有目录：`resources/data/items|skills|quests|shops|story|maps|encounters|actors`
-- 已有加载链：
-  - `scripts/content/content_loader.gd`
-  - `scripts/content/content_db.gd`
-  - `scripts/content/*_catalog.gd`
-- 已删除旧权威数据文件：
-  - `resources/data/items_data.gd`
-  - `resources/data/skills_data.gd`
-  - `resources/data/quests_data.gd`
+- 已落地内容层：`scripts/content/content_db.gd`、`content_loader.gd`、`*_catalog.gd`
+- 数据目录已统一到 `resources/data/items|skills|quests|shops|story|maps|encounters|actors`
+- 旧权威数据文件已删除：`items_data.gd`、`skills_data.gd`、`quests_data.gd`
 
 ## Phase 2 - 运行时状态拆分
 **状态：已完成（核心）**
-- 已有状态层：`scripts/state/profile_state.gd`、`run_state.gd`、`party_state.gd`、`inventory_state.gd`、`quest_state.gd`、`shop_state.gd`、`story_state.gd`、`world_state.gd`
-- `Session` 已作为状态总入口：`scripts/core/session.gd`
+- 状态层已落地：`profile_state`、`run_state`、`party_state`、`inventory_state`、`quest_state`、`shop_state`、`story_state`、`world_state`
+- `Session` 已作为运行状态入口
 
 ## Phase 3 - SaveService 与迁移
 **状态：已完成（核心）**
-- 已有：
-  - `scripts/core/save_service.gd`
-  - `scripts/core/save_migrator.gd`
-  - `scripts/core/run_state_serializer.gd`
-  - `scripts/core/profile_state_serializer.gd`
-  - `scripts/core/save_slot_info.gd`
+- 已落地：`save_service.gd`、`save_migrator.gd`、`run_state_serializer.gd`、`profile_state_serializer.gd`
+- 旧档迁移链仍保留（`legacy save -> 新结构`）
 
 ## Phase 4 - 条件/动作层
 **状态：已完成（核心）**
-- 已有：
-  - `scripts/services/condition_service.gd`
-  - `scripts/services/action_executor.gd`
-  - `scripts/services/trigger_router.gd`
-  - `scripts/core/game_events.gd`
+- 已落地：`condition_service.gd`、`action_executor.gd`、`trigger_router.gd`、`game_events.gd`
 
 ## Phase 5 - UI 路由与输入路由
-**状态：已完成（结构到位，仍有兼容 UI 逻辑）**
-- 已有：
-  - `scripts/core/ui_router.gd`
-  - `scripts/core/input_router.gd`
-- 已补 UI 分屏骨架：
-  - `scripts/ui/hud_screen.gd` + `scenes/ui/hud_screen.tscn`
-  - `scripts/ui/inventory_screen.gd` + `scenes/ui/inventory_screen.tscn`
-  - `scripts/ui/character_screen.gd` + `scenes/ui/character_screen.tscn`
-  - `scripts/ui/dialogue_screen.gd` + `scenes/ui/dialogue_screen.tscn`
-  - `scripts/ui/shop_screen.gd` + `scenes/ui/shop_screen.tscn`
-  - `scripts/ui/battle_screen.gd` + `scenes/ui/battle_screen.tscn`
-  - `scripts/ui/journal_screen.gd` + `scenes/ui/journal_screen.tscn`
-- 说明：现有 `scripts/ui.gd` 仍承载主 HUD/背包逻辑，属兼容层。
+**状态：已完成（收口）**
+- 已落地：`ui_router.gd`、`input_router.gd`
+- `scripts/ui.gd` 已删除，HUD/背包逻辑已拆分到 `scripts/ui/hud_screen.gd` 与 `scripts/ui/inventory_screen.gd`
+- 战斗与对话入口已迁移为 `scripts/ui/battle_screen.gd`、`scripts/ui/dialogue_screen.gd`
+- 已删除未接线占位 UI：`scenes/ui/hud_screen.tscn`、`scenes/ui/inventory_screen.tscn`、`scenes/ui/character_screen.tscn`
 
 ## Phase 6 - 世界层与地图规则
 **状态：已完成（基础）**
-- 已有：
-  - `scripts/world/map_service.gd`
-  - `scripts/world/movement_service.gd`
-  - `scripts/world/collision_service.gd`
-  - `scripts/world/elevation_service.gd`
-  - `scripts/world/map_runtime.gd`
-  - `scripts/world/interaction_source.gd`
-  - `scripts/world/interaction_registry.gd`
-  - `scripts/world/spawn_service.gd`
-- 场景到位：
-  - `scenes/world/world_root.tscn`
-  - `scenes/interaction/shop_source.tscn`
-  - `scenes/interaction/quest_board_source.tscn`
-  - `scenes/interaction/story_trigger.tscn`
+- 已落地：`map_service.gd`、`movement_service.gd`、`collision_service.gd`、`elevation_service.gd`、`interaction_registry.gd`、`spawn_service.gd`
+- 交互源场景已落地：`shop_source.tscn`、`quest_board_source.tscn`、`story_trigger.tscn`
 
 ## Phase 7 - 任务/商店领域重构
 **状态：已完成（主逻辑已迁移）**
-- 已有服务：
-  - `scripts/progression/quest_service.gd`
-  - `scripts/progression/shop_service.gd`
-  - `scripts/progression/reward_service.gd`
-- 已删除旧管理器：
-  - `scripts/quest_manager.gd`（已删）
-  - `scripts/shop_manager.gd`（已删）
-- 已删除旧商店 UI 链路：
-  - `scripts/shop_ui.gd`（已删）
-  - `scripts/shop_ui_controller.gd`（已删）
-  - `scenes/shop_ui.tscn`（已删，已迁至 `scenes/ui/shop_screen.tscn`）
+- 已落地：`quest_service.gd`、`shop_service.gd`、`reward_service.gd`
+- 旧链路已删：`quest_manager.gd`、`shop_manager.gd`、`shop_ui*.gd`、`scenes/shop_ui.tscn`
 
 ## Phase 8 - 队伍制战斗核心
 **状态：已完成（核心）**
-- 已有：
-  - `scripts/battle/combatant_state.gd`
-  - `scripts/battle/battle_session.gd`
-  - `scripts/battle/battle_resolver.gd`
-  - `scripts/battle/targeting_service.gd`
-  - `scripts/battle/encounter_service.gd`
-- `scripts/battle_manager.gd` 已接入会话驱动与状态快照 UI
-- 已新增遭遇内容源：
-  - `resources/data/encounters/default_encounters.gd`
-  - `scripts/content/encounter_catalog.gd`
-  - `ContentDB.get_encounter_definition()`
+- 核心已落地：`battle_session.gd`、`battle_resolver.gd`、`targeting_service.gd`、`encounter_service.gd`、`combatant_state.gd`
+- 战斗服务已迁移为：`scripts/battle/battle_service.gd`
+- 旧战斗入口文件已删除：`scripts/battle_manager.gd`、`scripts/battle_scene.gd`、`scenes/battle_scene.tscn`
 
 ## Phase 9 - 剧情系统与结局
 **状态：已完成（基础实现）**
-- 已有：
-  - `scripts/narrative/story_service.gd`
-  - `scripts/narrative/ending_resolver.gd`
-  - `scripts/narrative/dialogue_presenter.gd`
-- 已有故事数据：
-  - `resources/data/story/default_story.gd`
-- 存档字段已包含 story：
-  - flags / current_segment_id / current_step_index / branch_choices
+- 已落地：`story_service.gd`、`ending_resolver.gd`、`dialogue_presenter.gd`
+- 对话入口场景已迁移为：`scenes/ui/dialogue_screen.tscn`
+- 旧文件已删除：`scripts/dialogue_manager.gd`、`scenes/dialogue_manager.tscn`
 
 ## Phase 10 - 二周目规则层
 **状态：已完成（基础实现）**
-- 已有：
-  - `scripts/progression/cycle_service.gd`
-  - `scripts/progression/carry_over_policy.gd`
-  - `scripts/progression/cycle_condition_service.gd`
-  - `scripts/ui/cycle_summary_screen.gd`
-  - `scenes/ui/cycle_summary_screen.tscn`
+- 已落地：`cycle_service.gd`、`carry_over_policy.gd`、`cycle_condition_service.gd`
+- `cycle_summary_screen` 已实现但目前未接线到主流程
 
 ## Phase 11 - 冗余清理与兼容层下线
-**状态：大体完成（已进行大规模清理）**
-- 已删除：
-  - `scripts/game_manager.gd`
-  - `scripts/item.gd`
-  - `resources/item.gd`
-  - `scripts/quest_manager.gd`
-  - `scripts/shop_manager.gd`
-  - `scripts/shop_ui.gd`
-  - `scripts/shop_ui_controller.gd`
-  - `scenes/shop_ui.tscn`
-  - `resources/data/items_data.gd`
-  - `resources/data/skills_data.gd`
-  - `resources/data/quests_data.gd`
-- autoload 已切换到 `App`，并移除了 `QuestManager/ShopManager`。
+**状态：进行中（高完成度）**
+- 已完成命名与路径收口：
+  - `InventoryService -> scripts/services/inventory_service.gd`
+  - `SkillService -> scripts/services/skill_service.gd`
+  - `BattleService -> scripts/battle/battle_service.gd`
+  - `EnemyStateService -> scripts/world/enemy_state_service.gd`
+  - `DialogueService -> scenes/ui/dialogue_screen.tscn`（autoload）
+- 旧兼容入口文件已删除：
+  - `scripts/inventory_manager.gd`
+  - `scripts/skill_manager.gd`
+  - `scripts/battle_manager.gd`
+  - `scripts/enemy_manager.gd`
+  - `scripts/ui.gd`
 
 ---
 
 ## 4. 当前 Autoload 真源（project.godot）
-`GameConstants, ContentDB, Session, App, Utils, SaveService, GameEvents, StoryService, ConditionService, ActionExecutor, TriggerRouter, UIRouter, InputRouter, MapService, MovementService, InteractionRegistry, SpawnService, RewardService, QuestService, ShopService, CycleService, InventoryManager, BattleManager, DialogueManager, SkillManager, AudioManager, EnemyManager`
-
-说明：
-- `InventoryManager/BattleManager/DialogueManager/SkillManager/EnemyManager/Utils` 目前仍是运行中的兼容入口（非死代码）。
+`GameConstants, ContentDB, Session, App, Utils, SaveService, GameEvents, StoryService, ConditionService, ActionExecutor, TriggerRouter, UIRouter, InputRouter, MapService, MovementService, InteractionRegistry, SpawnService, RewardService, QuestService, ShopService, CycleService, InventoryService, BattleService, DialogueService, SkillService, AudioManager, EnemyStateService`
 
 ---
 
-## 5. 关键行为验证（已做）
-- 命令：`godot --headless --path . --import`
-- 结果：通过。
-- 曾出现的 UID warning（`main.tscn` 中 player/ui/skeleton）已修复。
-
----
-
-## 6. 当前已知技术债（进入 Phase 12 前）
-1. `scripts/ui.gd` 仍承担较多旧 UI 逻辑，可继续拆到 `scripts/ui/*_screen.gd`。
-2. `InventoryManager/BattleManager/DialogueManager/SkillManager/EnemyManager` 仍是兼容层入口，后续可继续服务化。
-3. `README.md` 仍是旧结构描述，尚未同步重构后架构与文件组织。
-4. 自动化测试尚未建立（`test/` 为空，未接 GUT）。
-
----
-
-## 7. 下一会话建议执行清单（Phase 12）
-1. 更新 `README.md`
-- 目标：反映 `App + Session + ContentDB + Services + State + World + UI` 架构。
-- 同步当前 autoload 和目录结构。
-
-2. 建立最小测试骨架（GUT）
-- 目标目录：`test/`
-- 建议优先：
-  - `QuestService` 接取/推进/领奖
-  - `ShopService` 购买/出售/库存变化
-  - `StoryService` segment/branch/flag
-  - `SaveService` 序列化反序列化一致性
-
-3. 手动冒烟脚本文档化
-- 新游戏
-- 打开背包/使用物品/装备
-- 商店买卖
-- 任务接取/推进/提交
-- 战斗五种操作
-- 存档/读档
-- 剧情 flag
-- 二周目启动
-
-4. 可选继续薄化
-- 把 `ui.gd` 拆到具体 screen
-- 逐步把 `InventoryManager` 的业务写入 `state/services`
-
----
-
-## 8. 新会话接手提示（Prompt 模板）
-可在新对话直接使用：
-
-```text
-请先读取 REFACTOR_PROGRESS_REPORT.md 和 REFACTOR_CHECKLIST.md。
-当前基准提交是 33298cc（main）。
-请从 Phase 12 开始，优先完成：
-1) README 架构同步
-2) GUT 最小测试骨架
-3) 手动冒烟流程文档
-保持项目可运行，每一步都执行 godot --headless --path . --import 验证。
+## 5. 最新可运行验证
+- 命令（2026-03-14）：
+```powershell
+& "C:\Users\lbs\Code\Godot_v4.6.1-stable_win64.exe\Godot_v4.6.1-stable_win64.exe" --headless --path . --import
 ```
+- 结果：通过（Exit code 0）
 
+---
+
+## 6. 当前已知待办（Phase 12 + 收口）
+1. 文档仍落后于代码
+- `README.md` 仍有旧路径/旧命名描述（如旧 manager 文件名）
+- 本报告已更新，但 `README.md` 需同步
+
+2. 测试体系未建立
+- `test/` 仍缺最小自动化回归骨架
+
+3. 二周目总结界面未接线
+- `scripts/ui/cycle_summary_screen.gd` 与 `scenes/ui/cycle_summary_screen.tscn` 仍未接主流程
+
+4. 旧档迁移链是否保留待决策
+- 若不再支持旧档，可移除 `save_migrator` 与 legacy 路径逻辑
+
+5. 提交收口未完成
+- 当前为大量未提交改动状态，需分批提交并回归验证
+
+---
+
+## 7. 下一会话建议执行顺序
+1. 同步 `README.md` 到当前架构与文件路径
+2. 为 `QuestService/ShopService/SaveService/StoryService` 建最小测试骨架
+3. 决策并处理 `cycle_summary_screen`（接线或下线）
+4. 决策并处理 legacy save 迁移链
+5. 分批提交重构改动，每批后执行一次 `--headless --import`

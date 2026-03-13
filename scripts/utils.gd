@@ -3,7 +3,7 @@
 # NOTE: This is an autoload singleton, access via Utils
 
 extends Node
-# Shared helper compatibility layer. Avoid adding new domain logic here.
+# Shared helper layer. Avoid adding new domain logic here.
 
 func can_move_to(target_pos: Vector2, tilemap_group: String = "tilemap", from_pos: Vector2 = Vector2.ZERO) -> bool:
 	if from_pos != Vector2.ZERO:

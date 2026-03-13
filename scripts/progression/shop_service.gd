@@ -46,7 +46,7 @@ func open_shop(shop_id: String, source_id: String = "") -> Dictionary:
 	_ui_controller.confirm_pressed.connect(_on_confirm)
 	_ui_controller.close_pressed.connect(close_shop)
 	_ui_controller.mode_changed.connect(_on_mode_changed)
-	_ui_controller.setup(_shop_definitions[shop_id]["name"], InventoryManager.gold)
+	_ui_controller.setup(_shop_definitions[shop_id]["name"], InventoryService.gold)
 	_update_item_list(true)
 
 	get_tree().root.add_child(_ui_controller)
@@ -154,7 +154,7 @@ func _update_buy_list() -> void:
 		_ui_controller.add_item_button(item_id, display_text, item_data.duplicate(true))
 
 func _update_sell_list() -> void:
-	for item in InventoryManager.get_all_items():
+	for item in InventoryService.get_all_items():
 		var item_id: String = item.get("item_id", "")
 		var price: int = int(item.get("price", 0) * float(_current_shop_data.get("sell_rate", 0.5)))
 		var display_text := "%s x%d - %dG" % [item.get("item_name", item_id), int(item.get("quantity", 0)), price]
@@ -186,7 +186,7 @@ func _on_confirm() -> void:
 		success = _sell_item(item_id, quantity)
 
 	if success:
-		_ui_controller.update_gold(InventoryManager.gold)
+		_ui_controller.update_gold(InventoryService.gold)
 		_update_item_list(_ui_controller.is_buying())
 
 func _buy_item(item_id: String, quantity: int) -> bool:
@@ -200,7 +200,7 @@ func _buy_item(item_id: String, quantity: int) -> bool:
 		return false
 
 	var price: int = int(item_data.get("price", 0) * float(_current_shop_data.get("buy_rate", 1.0)) * quantity)
-	if InventoryManager.gold < price:
+	if InventoryService.gold < price:
 		_ui_controller.update_description("金币不足")
 		return false
 
@@ -208,8 +208,8 @@ func _buy_item(item_id: String, quantity: int) -> bool:
 		_ui_controller.update_description("背包已满")
 		return false
 
-	InventoryManager.spend_gold(price)
-	InventoryManager.add_item(item_data, quantity)
+	InventoryService.spend_gold(price)
+	InventoryService.add_item(item_data, quantity)
 	if not bool(shop_item.get("infinite", false)):
 		shop_item["quantity"] = int(shop_item.get("quantity", 0)) - quantity
 		_current_shop_data["items"][item_id] = shop_item
@@ -223,15 +223,15 @@ func _buy_item(item_id: String, quantity: int) -> bool:
 	return true
 
 func _sell_item(item_id: String, quantity: int) -> bool:
-	var owned: int = InventoryManager.get_item_count_by_id(item_id)
+	var owned: int = InventoryService.get_item_count_by_id(item_id)
 	if owned < quantity:
 		_ui_controller.update_description("物品数量不足")
 		return false
 
-	var item_data: Dictionary = InventoryManager.get_item_data(item_id)
+	var item_data: Dictionary = InventoryService.get_item_data(item_id)
 	var price: int = int(item_data.get("price", 0) * float(_current_shop_data.get("sell_rate", 0.5)) * quantity)
-	InventoryManager.remove_item_by_id(item_id, quantity)
-	InventoryManager.add_gold(price)
+	InventoryService.remove_item_by_id(item_id, quantity)
+	InventoryService.add_gold(price)
 
 	item_sold.emit(item_id, quantity, price)
 	GameEvents.emit_domain_event(
@@ -242,9 +242,9 @@ func _sell_item(item_id: String, quantity: int) -> bool:
 
 func _can_add_to_inventory(item_data: Dictionary, quantity: int) -> bool:
 	var item_id: String = item_data.get("item_id", item_data.get("item_name", "unknown"))
-	if InventoryManager.has_item_id(item_id):
-		var current_qty: int = InventoryManager.get_item_count_by_id(item_id)
+	if InventoryService.has_item_id(item_id):
+		var current_qty: int = InventoryService.get_item_count_by_id(item_id)
 		var max_stack: int = int(item_data.get("max_stack", GameConstants.MAX_STACK_SIZE))
 		if bool(item_data.get("stackable", true)) and current_qty + quantity <= max_stack:
 			return true
-	return InventoryManager.item_quantities.size() < GameConstants.MAX_UNIQUE_ITEMS
+	return InventoryService.item_quantities.size() < GameConstants.MAX_UNIQUE_ITEMS

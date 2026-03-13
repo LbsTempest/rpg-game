@@ -28,7 +28,7 @@ func start_new_game() -> void:
 	is_new_game = true
 	Session.start_new_run()
 	current_scene_name = "main"
-	_reset_all_managers()
+	_reset_runtime_services()
 	new_game_started.emit()
 	change_scene(GameConstants.SCENE_MAIN)
 
@@ -44,13 +44,13 @@ func start_new_cycle() -> Dictionary:
 	change_scene(GameConstants.SCENE_MAIN)
 	return result
 
-func _reset_all_managers() -> void:
+func _reset_runtime_services() -> void:
 	QuestService.reset_state()
 	ShopService.reset_state()
-	SkillManager.reset_skills()
-	InventoryManager.reset_state()
+	SkillService.reset_skills()
+	InventoryService.reset_state()
 	_give_starting_items()
-	EnemyManager.reset_all_enemies()
+	EnemyStateService.reset_all_enemies()
 
 func _give_starting_items() -> void:
 	for entry in ContentDB.get_starting_item_entries():
@@ -62,9 +62,9 @@ func _give_starting_items() -> void:
 		if item_data.is_empty():
 			push_warning("Missing starting item definition: " + item_id)
 			continue
-		InventoryManager.add_item(item_data, quantity)
+		InventoryService.add_item(item_data, quantity)
 
-	InventoryManager.add_gold(ContentDB.get_starting_gold())
+	InventoryService.add_gold(ContentDB.get_starting_gold())
 
 func save_game() -> void:
 	if SaveService.save_current_run():

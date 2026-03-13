@@ -16,7 +16,7 @@ func start_new_cycle(profile_slot_id: String = "0") -> Dictionary:
 
 	Session.profile.cycle_index += 1
 	Session.start_new_run()
-	_reset_managers_for_new_cycle()
+	_reset_services_for_new_cycle()
 	_apply_starting_items()
 
 	_last_cycle_summary = apply_carry_over_rules()
@@ -63,12 +63,12 @@ func _snapshot_current_run() -> Dictionary:
 		}
 	}
 
-func _reset_managers_for_new_cycle() -> void:
+func _reset_services_for_new_cycle() -> void:
 	QuestService.reset_state()
 	ShopService.reset_state()
-	SkillManager.reset_skills()
-	InventoryManager.reset_state()
-	EnemyManager.reset_all_enemies()
+	SkillService.reset_skills()
+	InventoryService.reset_state()
+	EnemyStateService.reset_all_enemies()
 
 func _apply_starting_items() -> void:
 	for entry in ContentDB.get_starting_item_entries():
@@ -81,6 +81,6 @@ func _apply_starting_items() -> void:
 		if item_data.is_empty():
 			push_warning("Missing starting item definition: " + item_id)
 			continue
-		InventoryManager.add_item(item_data, quantity)
+		InventoryService.add_item(item_data, quantity)
 
-	InventoryManager.add_gold(ContentDB.get_starting_gold())
+	InventoryService.add_gold(ContentDB.get_starting_gold())

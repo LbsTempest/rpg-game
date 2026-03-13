@@ -46,13 +46,13 @@ func _ready() -> void:
 	call_deferred("_register_to_manager")
 
 func _register_to_manager() -> void:
-	EnemyManager.register_enemy(self)
+	EnemyStateService.register_enemy(self)
 
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 	
-	if BattleManager.is_in_battle or DialogueManager.is_active or App.is_inventory_open:
+	if BattleService.is_in_battle or DialogueService.is_active or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		Utils.play_animation(animated_sprite, "idle")
 		return
@@ -129,14 +129,14 @@ func reset_defense_boost() -> void:
 func _die() -> void:
 	is_alive = false
 	velocity = Vector2.ZERO
-	EnemyManager.update_enemy_state(self)
+	EnemyStateService.update_enemy_state(self)
 	Utils.play_animation(animated_sprite, "death")
 	died.emit(self)
 
 func _start_battle() -> void:
-	if is_alive and not BattleManager.is_in_battle:
+	if is_alive and not BattleService.is_in_battle:
 		velocity = Vector2.ZERO
-		BattleManager.start_battle(self)
+		BattleService.start_battle(self)
 
 func decide_action(player: Node) -> Dictionary:
 	if not is_alive:

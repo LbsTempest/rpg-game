@@ -1,5 +1,4 @@
 extends Node
-# Legacy enemy persistence manager retained for compatibility.
 
 var enemy_states: Dictionary:
 	get:
@@ -8,7 +7,7 @@ var enemy_states: Dictionary:
 		_world_state().enemy_states = value
 
 func _ready() -> void:
-	print("EnemyManager 初始化完成")
+	print("EnemyStateService 初始化完成")
 
 func _world_state():
 	return Session.run_state.world

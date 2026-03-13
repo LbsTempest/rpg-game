@@ -60,7 +60,7 @@ func execute_player_action(
 			if not skill_targets.is_empty() and skill_targets[0].source_node != null:
 				target_node = skill_targets[0].source_node
 
-			var skill_result: Dictionary = SkillManager.use_skill(skill_id, player_node, target_node)
+			var skill_result: Dictionary = SkillService.use_skill(skill_id, player_node, target_node)
 			result.message = skill_result.get("message", "")
 
 		GameConstants.ACTION_ITEM:
@@ -128,7 +128,7 @@ func execute_enemy_turn(session: BattleSession) -> Dictionary:
 	result.message = action_result.get("message", "")
 
 	target.set_defending(false)
-	SkillManager.reduce_cooldowns()
+	SkillService.reduce_cooldowns()
 	session.round_index += 1
 
 	session.refresh()
@@ -147,11 +147,11 @@ func _use_item_in_battle(
 		result.message = "玩家不存在"
 		return result
 
-	if not InventoryManager.has_item_id(item_id):
+	if not InventoryService.has_item_id(item_id):
 		result.message = "物品不存在"
 		return result
 
-	var item_data: Dictionary = InventoryManager.get_item_data(item_id)
+	var item_data: Dictionary = InventoryService.get_item_data(item_id)
 	var item_name: String = item_data.get("display_name", item_data.get("item_name", "未知物品"))
 	if item_data.get("item_type", GameConstants.ITEM_TYPE_CONSUMABLE) != GameConstants.ITEM_TYPE_CONSUMABLE:
 		result.message = "%s 不是消耗品" % item_name
@@ -177,7 +177,7 @@ func _use_item_in_battle(
 			effect_messages.append("恢复 %d 点魔法值" % item_data.restore_mana_amount)
 
 	if used:
-		InventoryManager.remove_item_by_id(item_id, 1)
+		InventoryService.remove_item_by_id(item_id, 1)
 		result.message = "使用 %s，%s" % [item_name, "，".join(effect_messages)]
 	else:
 		result.message = "%s 没有效果" % item_name

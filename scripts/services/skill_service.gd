@@ -1,5 +1,4 @@
 extends Node
-# Legacy skill manager retained while combat/services migration completes.
 
 signal skill_learned(skill_id: String)
 signal skill_cooldown_updated(skill_id: String, cooldown: int)

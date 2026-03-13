@@ -81,7 +81,7 @@ const SAVE_FILE_PATH := "user://save_game.json"
 # Scene Paths
 const SCENE_MAIN_MENU := "res://scenes/main_menu.tscn"
 const SCENE_MAIN := "res://scenes/main.tscn"
-const SCENE_BATTLE := "res://scenes/battle_scene.tscn"
+const SCENE_BATTLE := "res://scenes/ui/battle_screen.tscn"
 
 # Action Types
 const ACTION_ATTACK := "attack"

@@ -136,7 +136,7 @@ func _process_quest_dialogue(data: Array) -> Array:
 	return processed
 
 func _physics_process(delta: float) -> void:
-	if is_dialogue_active or DialogueManager.is_active or App.is_inventory_open:
+	if is_dialogue_active or DialogueService.is_active or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		Utils.play_animation(animated_sprite, "idle")
 		move_and_slide()
@@ -184,14 +184,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _on_player_entered(body: Node2D) -> void:
-	if body.is_in_group("player") and can_interact and not is_dialogue_active and not DialogueManager.is_active:
+	if body.is_in_group("player") and can_interact and not is_dialogue_active and not DialogueService.is_active:
 		velocity = Vector2.ZERO
 		Utils.play_animation(animated_sprite, "idle")
 		animated_sprite.flip_h = body.position.x < position.x
 		
 		QuestService.update_progress(GameConstants.OBJECTIVE_TALK, npc_name, 1)
 		
-		DialogueManager.start_dialogue(self)
+		DialogueService.start_dialogue(self)
 
 func accept_quest() -> bool:
 	if gives_quest.is_empty():

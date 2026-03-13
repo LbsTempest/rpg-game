@@ -1,6 +1,4 @@
 extends Node
-# Legacy battle entrypoint kept as compatibility facade for scenes/UI.
-# New battle domain logic should live in scripts/battle/*.
 
 signal battle_started(enemy: Node2D)
 signal battle_ended(result: String, rewards: Dictionary)
@@ -68,7 +66,7 @@ func end_battle(result: String) -> void:
 			rewards = _collect_victory_rewards()
 			if player and player.has_method("add_experience"):
 				player.add_experience(rewards.get("experience", 0))
-			InventoryManager.add_gold(rewards.get("gold", 0))
+			InventoryService.add_gold(rewards.get("gold", 0))
 			_award_kill_progress()
 			_append_log(
 				"战斗胜利！获得 %d 经验值和 %d 金币！" % [rewards.get("experience", 0), rewards.get("gold", 0)]
@@ -186,7 +184,7 @@ func can_use_skill(actor_id: String, skill_id: String) -> Dictionary:
 	var actor := _resolve_player_actor(actor_id)
 	if actor == null or actor.source_node == null:
 		return {"can_use": false, "reason": "玩家不存在"}
-	return SkillManager.can_use_skill(skill_id, actor.source_node)
+	return SkillService.can_use_skill(skill_id, actor.source_node)
 
 func use_item_in_battle(user_id: String, item_id: String, target_spec: Dictionary = {}) -> Dictionary:
 	var payload := target_spec.duplicate(true)
@@ -197,7 +195,7 @@ func get_available_skills_for_ui(actor_id: String = "") -> Array[Dictionary]:
 	var actor := _resolve_player_actor(actor_id)
 	if actor == null or actor.source_node == null:
 		return []
-	return SkillManager.get_available_skills_for_ui(actor.source_node)
+	return SkillService.get_available_skills_for_ui(actor.source_node)
 
 func get_consumable_items_for_ui(user_id: String = "") -> Array[Dictionary]:
 	var actor := _resolve_player_actor(user_id)
@@ -205,7 +203,7 @@ func get_consumable_items_for_ui(user_id: String = "") -> Array[Dictionary]:
 		return []
 
 	var items: Array[Dictionary] = []
-	for item in InventoryManager.get_all_items():
+	for item in InventoryService.get_all_items():
 		if item.get("item_type", GameConstants.ITEM_TYPE_CONSUMABLE) == GameConstants.ITEM_TYPE_CONSUMABLE:
 			items.append(item)
 	return items

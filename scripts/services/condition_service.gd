@@ -84,7 +84,7 @@ func _check_items(conditions: Dictionary) -> Dictionary:
 			continue
 		var item_id: String = item_req.get("item_id", "")
 		var quantity: int = int(item_req.get("quantity", 1))
-		if InventoryManager.get_item_count_by_id(item_id) < quantity:
+		if InventoryService.get_item_count_by_id(item_id) < quantity:
 			return {"passed": false, "reason": "missing_required_item:" + item_id}
 
 	return {"passed": true, "reason": ""}

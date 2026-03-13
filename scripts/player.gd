@@ -40,7 +40,7 @@ func _ready() -> void:
 	_update_ui()
 
 func _physics_process(delta: float) -> void:
-	if DialogueManager.is_active or BattleManager.is_in_battle or App.is_inventory_open:
+	if DialogueService.is_active or BattleService.is_in_battle or App.is_inventory_open:
 		velocity = Vector2.ZERO
 		_play_idle_animation()
 		move_and_slide()
@@ -89,10 +89,10 @@ func _apply_state_from_session() -> void:
 	Session.apply_player_state_to_node(self)
 
 func get_total_attack() -> int:
-	return attack + InventoryManager.get_total_attack()
+	return attack + InventoryService.get_total_attack()
 
 func get_total_defense() -> int:
-	return defense + InventoryManager.get_total_defense()
+	return defense + InventoryService.get_total_defense()
 
 func take_damage(amount: int) -> void:
 	var total_defense = get_total_defense()

@@ -3,7 +3,7 @@ extends Node
 func grant_gold(amount: int) -> bool:
 	if amount <= 0:
 		return false
-	InventoryManager.add_gold(amount)
+	InventoryService.add_gold(amount)
 	GameEvents.emit_domain_event("reward_gold_granted", {"amount": amount})
 	return true
 
@@ -15,7 +15,7 @@ func grant_item(item_id: String, quantity: int = 1) -> bool:
 	if item_data.is_empty():
 		return false
 
-	var added: bool = InventoryManager.add_item(item_data, quantity)
+	var added: bool = InventoryService.add_item(item_data, quantity)
 	if added:
 		GameEvents.emit_domain_event("reward_item_granted", {"item_id": item_id, "quantity": quantity})
 	return added

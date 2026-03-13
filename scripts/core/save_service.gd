@@ -88,7 +88,7 @@ func _sync_runtime_state_to_scene() -> void:
 		player.load_save_data(Session.get_player_state().to_save_data())
 
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		EnemyManager.register_enemy(enemy)
+		EnemyStateService.register_enemy(enemy)
 
 func _write_json(path: String, payload: Dictionary) -> bool:
 	var file := FileAccess.open(path, FileAccess.WRITE)

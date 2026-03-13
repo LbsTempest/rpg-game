@@ -37,12 +37,12 @@ RewardService="*res://scripts/progression/reward_service.gd"
 QuestService="*res://scripts/progression/quest_service.gd"
 ShopService="*res://scripts/progression/shop_service.gd"
 CycleService="*res://scripts/progression/cycle_service.gd"
-InventoryManager="*res://scripts/inventory_manager.gd"
-BattleManager="*res://scripts/battle_manager.gd"
-DialogueManager="*res://scenes/dialogue_manager.tscn"
-SkillManager="*res://scripts/skill_manager.gd"
+InventoryService="*res://scripts/services/inventory_service.gd"
+BattleService="*res://scripts/battle/battle_service.gd"
+DialogueService="*res://scenes/ui/dialogue_screen.tscn"
+SkillService="*res://scripts/services/skill_service.gd"
 AudioManager="*res://scripts/audio_manager.gd"
-EnemyManager="*res://scripts/enemy_manager.gd"
+EnemyStateService="*res://scripts/world/enemy_state_service.gd"
 
 [display]
 
